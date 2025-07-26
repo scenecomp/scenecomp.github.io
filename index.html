@@ -1,59 +1,228 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SceneComp 2025</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #0c0c0c;
-      color: #ffffff;
-      margin: 0;
-      padding: 0 1rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      text-align: center;
-    }
-    h1 {
-      font-size: 2.5rem;
-      margin-top: 0;
-    }
-    h2 {
-      font-size: 1.2rem;
-      font-weight: normal;
-      color: #999;
-    }
-    a {
-      color: #66d9ef;
-      text-decoration: none;
-    }
-    .button {
-      display: inline-block;
-      margin-top: 1.5rem;
-      padding: 0.6rem 1.2rem;
-      background: #222;
-      border: 1px solid #444;
-      border-radius: 5px;
-      color: white;
-      transition: background 0.3s;
-    }
-    .button:hover {
-      background: #333;
-    }
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
 </head>
-<body>
+
+<body class="font-sans bg-gray-50 text-gray-900">
+
+  <video id="scrollVideo" class="fixed top-0 left-0 w-full h-full object-cover -z-10 opacity-20 pointer-events-none"
+    muted autoplay loop playsinline>
+    <source src="your-video.mp4" type="video/mp4">
+  </video>
+
   <main>
-    <h1>SceneComp 2025</h1>
-    <h2>Generative Scene Completion for Immersive Worlds</h2>
+    <header class="py-8 px-4 max-w-2xl mx-auto text-center">
+      <h1 class="text-4xl font-bold mb-2">SceneComp 2025</h1>
+      <h2 class="text-2xl font-semibold mb-2">Generative Scene Completion for Immersive Worlds</h2>
+      <p class="block w-full bg-gray-200 p-4 rounded text-sm mb-6 text-gray-700 font-[Roboto,sans-serif] text-justify">
+        This workshop focuses on generative scene completion, which is indispensable for world models, VR/AR,
+        telepresence, autonomous driving, and robotics. It explores how generative models can help reconstruct
+        photorealistic 3D environments from sparse or partial input data by filling in occluded or unseen spaces. Topics
+        include world models, generative models, inpainting, artifact removal, uncertainty, controllability, and
+        handling of casual data. We will discuss how related directions like text-to-3D and single-image-to-3D compare
+        with scene completion, where more input constraints must be satisfied. The workshop highlights key challenges
+        and recent progress in transforming incomplete real-world captures into immersive environments.
+      </p>
+      <p class="italic mb-4">October 20, 2025 · Morning Session at ICCV</p>
+      <div class="flex flex-wrap justify-center gap-4 mt-4">
+        <div class="relative group">
+          <a href="mailto:scenecomp@googlegroups.com"
+            class="inline-block bg-white border border-gray-300 rounded-md px-5 py-2 font-semibold shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition">Contact
+            Us</a>
+          <span
+            class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-max bg-gray-800 text-white text-sm rounded px-3 py-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-events-none transition whitespace-nowrap shadow-lg">scenecomp@googlegroups.com</span>
+        </div>
+        <div class="relative group">
+          <button
+            class="inline-block bg-blue-600 text-white border border-blue-700 rounded-md px-5 py-2 font-semibold shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+            onclick="document.getElementById('qrModal').style.display='flex'">Get QR Code</button>
+          <span
+            class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-max bg-gray-800 text-white text-sm rounded px-3 py-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-events-none transition whitespace-nowrap shadow-lg">Scan
+            to access workshop details</span>
+        </div>
+      </div>
+    </header>
 
-    <p>Website coming soon. See you at ICCV 2025!</p>
+    <section id="schedule" class="py-8 px-4 max-w-2xl mx-auto text-center">
+      <h2 class="text-2xl font-bold mb-4">Schedule</h2>
+      <table class="w-full border-collapse mt-4">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="border-b border-gray-300 py-2 px-3">Time</th>
+            <th class="border-b border-gray-300 py-2 px-3">Speaker</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="bg-gray-200">
+            <td class="border-b border-gray-200 py-2 px-3 italic font-medium">08:30 – 08:40</td>
+            <td class="border-b border-gray-200 py-2 px-3 italic font-medium">Opening Remarks</td>
+          </tr>
+          <tr>
+            <td class="border-b border-gray-200 py-2 px-3">08:40 – 09:10</td>
+            <td class="border-b border-gray-200 py-2 px-3">Peter Kontschieder</td>
+          </tr>
+          <tr>
+            <td class="border-b border-gray-200 py-2 px-3">09:10 – 09:40</td>
+            <td class="border-b border-gray-200 py-2 px-3">Aleksander Hołyński</td>
+          </tr>
+          <tr>
+            <td class="border-b border-gray-200 py-2 px-3">09:40 – 10:10</td>
+            <td class="border-b border-gray-200 py-2 px-3">Angela Dai</td>
+          </tr>
+          <tr>
+            <td class="border-b border-gray-200 py-2 px-3">10:10 – 10:40</td>
+            <td class="border-b border-gray-200 py-2 px-3"><a href="#" target="_blank" rel="noopener noreferrer"
+                class="text-blue-600 hover:underline">Noah Snavely</a></td>
+          </tr>
+          <tr class="bg-gray-200">
+            <td class="border-b border-gray-200 py-2 px-3 italic font-medium">10:40 – 10:50</td>
+            <td class="border-b border-gray-200 py-2 px-3 italic font-medium">Coffee Break</td>
+          </tr>
+          <tr>
+            <td class="border-b border-gray-200 py-2 px-3">10:50 – 11:20</td>
+            <td class="border-b border-gray-200 py-2 px-3">Vincent Sitzmann</td>
+          </tr>
+          <tr>
+            <td class="border-b border-gray-200 py-2 px-3">11:20 – 11:50</td>
+            <td class="border-b border-gray-200 py-2 px-3">Zan Gojcic</td>
+          </tr>
+          <tr>
+            <td class="border-b border-gray-200 py-2 px-3">11:50 – 12:20</td>
+            <td class="border-b border-gray-200 py-2 px-3">Andrea Tagliasacchi</td>
+          </tr>
+          <tr class="bg-gray-200">
+            <td class="border-b border-gray-200 py-2 px-3 italic font-medium">12:20 – 12:30</td>
+            <td class="border-b border-gray-200 py-2 px-3 italic font-medium">Closing Remarks</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
 
-    <a class="button" href="mailto:scenecomp@googlegroups.com">Contact Us</a>
+    <section id="speakers" class="py-8 px-4 max-w-2xl mx-auto text-center">
+      <h2 class="text-2xl font-bold mb-4">Invited Speakers</h2>
+      <div class="grid grid-cols-2 md:grid-cols-12 gap-6 mt-6 justify-items-center">
+        <!-- First row: 3 people + 1 empty cell -->
+        <div class="text-center w-40 md:col-span-4"><img src="speaker1.jpg" alt="Angela Dai"
+            class="w-28 h-28 mx-auto rounded-full border-2 border-gray-200 object-cover mb-2" />
+          <p class="font-semibold"><a href="#" target="_blank" rel="noopener noreferrer"
+              class="text-blue-600 hover:underline">Angela Dai</a><br><span class="font-normal">TU Munich</span></p>
+        </div>
+        <div class="text-center w-40 md:col-span-4"><img src="speaker2.jpg" alt="Andrea Tagliasacchi"
+            class="w-28 h-28 mx-auto rounded-full border-2 border-gray-200 object-cover mb-2" />
+          <p class="font-semibold"><a href="#" target="_blank" rel="noopener noreferrer"
+              class="text-blue-600 hover:underline">Andrea Tagliasacchi</a><br><span class="font-normal">SFU /
+              DeepMind</span></p>
+        </div>
+        <div class="text-center w-40 md:col-span-4"><img src="speaker3.jpg" alt="Vincent Sitzmann"
+            class="w-28 h-28 mx-auto rounded-full border-2 border-gray-200 object-cover mb-2" />
+          <p class="font-semibold"><a href="#" target="_blank" rel="noopener noreferrer"
+              class="text-blue-600 hover:underline">Vincent Sitzmann</a><br><span class="font-normal">MIT</span></p>
+        </div>
+        <!-- Second row: 4 people -->
+        <div class="text-center w-40 md:col-span-3"><img src="speaker4.jpg" alt="Noah Snavely"
+            class="w-28 h-28 mx-auto rounded-full border-2 border-gray-200 object-cover mb-2" />
+          <p class="font-semibold"><a href="#" target="_blank" rel="noopener noreferrer"
+              class="text-blue-600 hover:underline">Noah Snavely</a><br><span class="font-normal">Cornell Tech /
+              DeepMind</span></p>
+        </div>
+        <div class="text-center w-40 md:col-span-3"><img src="speaker5.jpg" alt="Aleksander Hołyński"
+            class="w-28 h-28 mx-auto rounded-full border-2 border-gray-200 object-cover mb-2" />
+          <p class="font-semibold"><a href="#" target="_blank" rel="noopener noreferrer"
+              class="text-blue-600 hover:underline">Aleksander Hołyński</a><br><span class="font-normal">Google
+              DeepMind</span></p>
+        </div>
+        <div class="text-center w-40 md:col-span-3"><img src="speaker6.jpg" alt="Zan Gojcic"
+            class="w-28 h-28 mx-auto rounded-full border-2 border-gray-200 object-cover mb-2" />
+          <p class="font-semibold"><a href="#" target="_blank" rel="noopener noreferrer"
+              class="text-blue-600 hover:underline">Zan Gojcic</a><br><span class="font-normal">NVIDIA Zurich</span></p>
+        </div>
+        <div class="text-center w-40 col-span-2 md:col-span-3"><img src="speaker7.jpg" alt="Peter Kontschieder"
+            class="w-28 h-28 mx-auto rounded-full border-2 border-gray-200 object-cover mb-2" />
+          <p class="font-semibold"><a href="#" target="_blank" rel="noopener noreferrer"
+              class="text-blue-600 hover:underline">Peter Kontschieder</a><br><span class="font-normal">Meta Reality
+              Labs</span></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="organizers" class="py-8 px-4 max-w-2xl mx-auto text-center">
+      <h2 class="text-2xl font-bold mb-4">Organizers</h2>
+      <div class="grid grid-cols-2 md:grid-cols-12 gap-6 mt-6 justify-items-center">
+        <!-- First row: 3 people + 1 empty cell -->
+        <div class="text-center w-40 md:col-span-3"><img src="organizer1.jpg" alt="Ethan Weber"
+            class="w-24 h-24 mx-auto rounded-full border-2 border-gray-200 object-cover mb-2" />
+          <p class="font-semibold"><a href="#" target="_blank" rel="noopener noreferrer"
+              class="text-blue-600 hover:underline">Ethan Weber</a><br><span class="font-normal">UC Berkeley</span></p>
+        </div>
+        <div class="text-center w-40 md:col-span-3"><img src="organizer2.jpg" alt="Koven Yu"
+            class="w-24 h-24 mx-auto rounded-full border-2 border-gray-200 object-cover mb-2" />
+          <p class="font-semibold"><a href="#" target="_blank" rel="noopener noreferrer"
+              class="text-blue-600 hover:underline">Hong-Xing “Koven” Yu</a><br><span
+              class="font-normal">Stanford</span></p>
+        </div>
+        <div class="text-center w-40 md:col-span-3"><img src="organizer3.jpg" alt="Lily Goli"
+            class="w-24 h-24 mx-auto rounded-full border-2 border-gray-200 object-cover mb-2" />
+          <p class="font-semibold"><a href="#" target="_blank" rel="noopener noreferrer"
+              class="text-blue-600 hover:underline">Lily Goli</a><br><span class="font-normal">University of
+              Toronto</span></p>
+        </div>
+        <div class="text-center w-40 md:col-span-3"><img src="organizer8.jpg" alt="Alex Trevithick"
+            class="w-24 h-24 mx-auto rounded-full border-2 border-gray-200 object-cover mb-2" />
+          <p class="font-semibold"><a href="#" target="_blank" rel="noopener noreferrer"
+              class="text-blue-600 hover:underline">Alex Trevithick</a><br><span class="font-normal">Google
+              DeepMind</span>
+          </p>
+        </div>
+        <!-- Second row: 4 people -->
+        <div class="text-center w-40 md:col-span-3"><img src="organizer4.jpg" alt="Norman Müller"
+            class="w-24 h-24 mx-auto rounded-full border-2 border-gray-200 object-cover mb-2" />
+          <p class="font-semibold"><a href="#" target="_blank" rel="noopener noreferrer"
+              class="text-blue-600 hover:underline">Norman Müller</a><br><span class="font-normal">Meta Reality
+              Labs</span></p>
+        </div>
+        <div class="text-center w-40 md:col-span-3"><img src="organizer5.jpg" alt="Christian Richardt"
+            class="w-24 h-24 mx-auto rounded-full border-2 border-gray-200 object-cover mb-2" />
+          <p class="font-semibold"><a href="#" target="_blank" rel="noopener noreferrer"
+              class="text-blue-600 hover:underline">Christian Richardt</a><br><span class="font-normal">Meta Reality
+              Labs</span></p>
+        </div>
+        <div class="text-center w-40 md:col-span-3"><img src="organizer6.jpg" alt="Angjoo Kanazawa"
+            class="w-24 h-24 mx-auto rounded-full border-2 border-gray-200 object-cover mb-2" />
+          <p class="font-semibold"><a href="#" target="_blank" rel="noopener noreferrer"
+              class="text-blue-600 hover:underline">Angjoo Kanazawa</a><br><span class="font-normal">UC Berkeley</span>
+          </p>
+        </div>
+        <div class="text-center w-40 md:col-span-3"><img src="organizer7.jpg" alt="Jiajun Wu"
+            class="w-24 h-24 mx-auto rounded-full border-2 border-gray-200 object-cover mb-2" />
+          <p class="font-semibold"><a href="#" target="_blank" rel="noopener noreferrer"
+              class="text-blue-600 hover:underline">Jiajun Wu</a><br><span class="font-normal">Stanford</span></p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="mt-8 text-gray-500 text-center text-base">
+      <p>© 2025 SceneComp · Hosted on GitHub Pages</p>
+    </footer>
   </main>
+
+  <div id="qrModal" class="fixed inset-0 bg-black bg-opacity-60 hidden justify-center items-center z-50"
+    onclick="this.style.display='none'">
+    <div class="bg-white p-8 rounded-lg max-w-xs w-full text-center relative" onclick="event.stopPropagation()">
+      <button class="absolute top-2 right-3 text-2xl text-gray-400 hover:text-gray-700"
+        onclick="document.getElementById('qrModal').style.display='none'">&times;</button>
+      <h3 class="text-lg font-semibold mb-4">Scan to Access</h3>
+      <img src="qrcode.png" alt="QR Code" class="w-full" />
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+
 </body>
+
 </html>
