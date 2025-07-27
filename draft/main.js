@@ -1,12 +1,36 @@
-const video = document.getElementById('scrollVideo');
-window.addEventListener('scroll', () => {
-  const scroll = window.scrollY / (document.body.scrollHeight - window.innerHeight);
-  if (video.duration) {
-    video.currentTime = video.duration * scroll;
-  }
-});
-
 document.addEventListener('DOMContentLoaded', () => {
+  const video = document.getElementById('scrollVideo');
+  let targetTime = 0;
+  const LERP_FACTOR = 0.1; // Controls smoothness: smaller is smoother
+
+  // Ensure the video is ready to play
+  video.addEventListener('loadedmetadata', () => {
+    video.pause();
+    
+    // Set up scroll listener
+    window.addEventListener('scroll', () => {
+      const scrollableHeight = document.body.scrollHeight - window.innerHeight;
+      if (scrollableHeight <= 0) return;
+      targetTime = (window.scrollY / scrollableHeight) * video.duration;
+    });
+
+    // Animation loop for smooth playback
+    const animate = () => {
+      const currentTime = video.currentTime;
+      const newTime = currentTime + (targetTime - currentTime) * LERP_FACTOR;
+      
+      // Only update if there's a significant change
+      if (Math.abs(newTime - currentTime) > 0.01) {
+        video.currentTime = newTime;
+      }
+      
+      requestAnimationFrame(animate);
+    };
+
+    // Start the animation loop
+    animate();
+  });
+
   const zoomLink = 'https://zoom.us/j/1234567890'; // Placeholder Zoom link
 
   // Update main "Add to Calendar" link

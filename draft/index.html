@@ -19,15 +19,16 @@
 <body class="font-sans bg-gray-50 text-gray-900">
 
   <video id="scrollVideo" class="fixed top-0 left-0 w-full h-full object-cover -z-10 opacity-20 pointer-events-none"
-    muted autoplay loop playsinline>
-    <source src="your-video.mp4" type="video/mp4">
+    muted playsinline preload="auto">
+    <source src="assets/fly-through.mp4" type="video/mp4">
   </video>
 
   <main>
     <header class="py-8 px-4 max-w-2xl mx-auto text-center">
       <h1 class="text-4xl font-bold mb-2">SceneComp @ ICCV 2025</h1>
       <h2 class="text-2xl font-semibold mb-2">Generative Scene Completion for Immersive Worlds</h2>
-      <p class="block w-full bg-gray-200 p-4 rounded text-sm mb-6 text-gray-700 font-[Roboto,sans-serif] text-justify">
+      <p
+        class="block w-full bg-gray-200/70 p-4 rounded text-sm mb-6 text-gray-900 font-[Roboto,sans-serif] text-justify backdrop-blur-sm">
         This workshop focuses on generative scene completion, which is indispensable for world models, VR/AR,
         telepresence, autonomous driving, and robotics. It explores how generative models can help reconstruct
         photorealistic 3D environments from sparse or partial input data by filling in occluded or unseen spaces. Topics
@@ -248,6 +249,9 @@
       <p>Contact us at <a href="mailto:scenecomp@googlegroups.com"
           class="text-blue-600 hover:underline">scenecomp@googlegroups.com</a></p>
       <p class="mt-2">© 2025 SceneComp</p>
+      <p class="mt-2">The background video is a drone fly-through mimicking scene generation <a
+          href="https://www.youtube.com/watch?v=qKFT4VA7elU" target="_blank" rel="noopener noreferrer"
+          class="text-blue-600 hover:underline">[YouTube source]</a></p>
     </footer>
   </main>
 
