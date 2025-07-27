@@ -59,6 +59,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const LERP_FACTOR = 0.1; // Controls smoothness: smaller is smoother
     video.pause();
 
+    // A function to calculate and set the video's target time based on scroll.
+    const setTargetTimeFromScroll = () => {
+      const scrollableHeight = document.body.scrollHeight - window.innerHeight;
+      if (scrollableHeight > 0 && video.duration) {
+        targetTime = (window.scrollY / scrollableHeight) * video.duration;
+      } else {
+        targetTime = 0;
+      }
+    };
+
     // For mobile, "prime" the video on the first touch to enable scripting.
     const primeVideo = () => {
       if (video.paused) {
@@ -69,13 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     document.body.addEventListener('touchstart', primeVideo);
 
+    // Set the initial position of the video on page load.
+    setTargetTimeFromScroll();
+    
     // Listen for scroll events to update the video's target time.
-    window.addEventListener('scroll', () => {
-      const scrollableHeight = document.body.scrollHeight - window.innerHeight;
-      if (scrollableHeight > 0 && video.duration) {
-        targetTime = (window.scrollY / scrollableHeight) * video.duration;
-      }
-    });
+    window.addEventListener('scroll', setTargetTimeFromScroll);
 
     // Use an animation loop for smooth, interpolated playback.
     const animate = () => {
