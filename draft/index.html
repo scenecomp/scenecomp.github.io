@@ -101,6 +101,10 @@
       width: 6%;
       height: 20%;
     }
+
+    html {
+      scroll-behavior: smooth;
+    }
   </style>
 </head>
 
@@ -112,9 +116,10 @@
   </video>
 
   <main>
-    <header class="py-8 px-4 max-w-2xl mx-auto text-center">
-      <h1 class="text-4xl font-bold mb-2">SceneComp @ ICCV 2025</h1>
-      <h2 class="text-2xl font-semibold mb-2">Generative Scene Completion for Immersive Worlds</h2>
+    <section class="py-8 px-4 max-w-2xl mx-auto text-left">
+      <h1 class="text-4xl font-bold mb-2 text-center">SceneComp @ ICCV 2025</h1>
+      <h2 class="text-2xl font-semibold mb-2 text-center">Generative Scene Completion for Immersive Worlds</h2>
+      <p class="text-center italic mb-4">Morning Session on Monday, October 20</p>
       <p
         class="block w-full bg-gray-200/70 p-4 rounded text-sm mb-6 text-gray-900 font-[Roboto,sans-serif] text-justify backdrop-blur-sm">
         This workshop focuses on generative scene completion, which is indispensable for world models, VR/AR,
@@ -125,7 +130,9 @@
         with scene completion, where more input constraints must be satisfied. The workshop highlights key challenges
         and recent progress in transforming incomplete real-world captures into immersive environments.
       </p>
-      <p class="italic mb-4">Morning Session on Monday, October 20</p>
+      <p class="text-center mt-4"><a href="#scene-completion-explainer"
+          class="text-blue-600 hover:underline font-semibold">Scroll down to our interactive explainer to learn
+          more.</a></p>
       <div class="flex flex-wrap justify-center gap-4 mt-4">
         <div class="relative group">
           <a id="main-calendar-link"
@@ -161,7 +168,7 @@
             to share this website</span>
         </div>
       </div>
-    </header>
+    </section>
 
     <section id="schedule" class="py-8 px-4 max-w-2xl mx-auto text-center">
       <h2 class="text-2xl font-bold mb-4">Schedule</h2>
@@ -343,77 +350,70 @@
     <section id="scene-completion-explainer" class="py-8 px-4 max-w-2xl mx-auto text-left">
       <h2 class="text-2xl font-bold mb-2 text-center">What is Scene Completion?</h2>
       <p class="text-center text-gray-500 italic mb-6">Reconstruct what you know, generate what you don't.</p>
-      <p class="text-sm text-gray-600 mb-8 text-center">Scene completion takes an optional amount of conditioning and
-        generates all the remaining content. In the top right of this graph, you have scene completion. The far left is
-        "Scene synthesis". The bottom axis is "Novel-view synthesis".</p>
+      <p class="text-sm text-gray-600 mb-8 text-center">Scene completion takes an optional amount of conditioning
+        information and
+        generates all the remaining content. In the top right of this graph, you have "Scene Completion", where you
+        have
+        both input views and generated content. The far left is
+        "Scene Synthesis", where you have very few or no images as input, yet generate a complete object of scene. The
+        bottom axis is "Novel-view Synthesis", which reconstructs what you see but cannot hallucinate anything new.</p>
       <div class="flex space-x-8">
         <!-- Tab buttons -->
-        <div class="flex flex-col space-y-2 w-1/3">
-          <button data-tab-target="#multi-image-content" data-highlight-class="multi-image-region"
-            class="tab-button p-4 text-left font-semibold rounded-lg border">Multiple Images to 3D Scene</button>
-          <button data-tab-target="#single-image-content" data-highlight-class="single-image-region"
-            class="tab-button p-4 text-left font-semibold rounded-lg border">Single Image to 360° Image</button>
-          <button data-tab-target="#text-prompt-content" data-highlight-class="text-prompt-region"
-            class="tab-button p-4 text-left font-semibold rounded-lg border">Text Prompt to 360° Image</button>
+        <div class="w-1/3">
+          <h4 class="font-semibold text-center mb-2">Tasks</h4>
+          <div class="flex flex-col border border-gray-300 divide-y divide-gray-300">
+            <button data-tab-target="#multi-image-content" data-highlight-class="multi-image-region"
+              class="tab-button p-3 text-left text-sm font-semibold">Multiple Images to 3D Scene</button>
+            <button data-tab-target="#single-image-content" data-highlight-class="single-image-region"
+              class="tab-button p-3 text-left text-sm font-semibold">Single Image to 360° Image</button>
+            <button data-tab-target="#text-prompt-content" data-highlight-class="text-prompt-region"
+              class="tab-button p-3 text-left text-sm font-semibold">Text Prompt to 360° Image</button>
+          </div>
         </div>
         <!-- Tab content -->
         <div class="w-2/3">
-          <div id="multi-image-content" class="tab-content p-4 border rounded-lg">
+          <div id="multi-image-content" class="tab-content p-4 border border-gray-300 h-64 overflow-y-auto">
             <h3 class="font-bold text-lg mb-2">Multiple Images to 3D Scene</h3>
             <p class="text-sm mb-4">This task involves reconstructing a complete 3D scene from several input images,
               often taken from different viewpoints. The goal is to fill in the gaps and unseen areas.</p>
             <h4 class="font-semibold mt-6 mb-2">Relevant Papers:</h4>
             <ul class="list-disc list-inside text-sm">
-              <li class="paper-item" data-highlight-target="#nerf-paper-highlight"><a
-                  href="https://arxiv.org/abs/2003.08934" target="_blank"
-                  title="NeRF: Representing Scenes as Neural Radiance Fields for View Synthesis"
-                  class="text-blue-600 hover:underline">NeRF</a></li>
-              <li class="paper-item" data-highlight-target="#pixelnerf-paper-highlight"><a
-                  href="https://arxiv.org/abs/2012.02190" target="_blank"
-                  title="pixelNeRF: Neural Radiance Fields from One or Few Images"
-                  class="text-blue-600 hover:underline">pixelNeRF</a>
-              </li>
+              <li class="paper-item" data-highlight-target="#nerf-paper-highlight">Paper 1</li>
+              <li class="paper-item" data-highlight-target="#pixelnerf-paper-highlight">Paper 2</li>
+              <li class="paper-item" data-highlight-target="#panodiff-paper-highlight">Paper 3</li>
+              <li class="paper-item" data-highlight-target="#immersegan-paper-highlight">Paper 4</li>
             </ul>
             <button
               class="submit-paper-btn mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-semibold py-2 px-3 rounded-lg transition">
               Submit a Paper
             </button>
           </div>
-          <div id="single-image-content" class="tab-content hidden p-4 border rounded-lg">
+          <div id="single-image-content" class="tab-content hidden p-4 border border-gray-300 h-64 overflow-y-auto">
             <h3 class="font-bold text-lg mb-2">Single Image to 360° Image</h3>
             <p class="text-sm mb-4">Also known as outpainting or panorama generation, this task aims to create a full
               360-degree view from a single input image by generating the unseen portions.</p>
             <h4 class="font-semibold mt-6 mb-2">Relevant Papers:</h4>
             <ul class="list-disc list-inside text-sm">
-              <li class="paper-item" data-highlight-target="#panodiff-paper-highlight"><a
-                  href="https://arxiv.org/abs/2308.14686" target="_blank"
-                  title="PanoDiff: 360-Degree Panorama Generation from Few Unregistered NFoV Images"
-                  class="text-blue-600 hover:underline">PanoDiff</a></li>
-              <li class="paper-item" data-highlight-target="#immersegan-paper-highlight"><a
-                  href="https://arxiv.org/abs/2208.09491" target="_blank"
-                  title="ImmerseGAN: Guided Co-Modulated GAN for 360° Field of View Extrapolation"
-                  class="text-blue-600 hover:underline">ImmerseGAN</a></li>
+              <li class="paper-item" data-highlight-target="#panodiff-paper-highlight">Paper 1</li>
+              <li class="paper-item" data-highlight-target="#immersegan-paper-highlight">Paper 2</li>
+              <li class="paper-item" data-highlight-target="#panodreamer-paper-highlight">Paper 3</li>
+              <li class="paper-item" data-highlight-target="#panfusion-paper-highlight">Paper 4</li>
             </ul>
             <button
               class="submit-paper-btn mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-semibold py-2 px-3 rounded-lg transition">
               Submit a Paper
             </button>
           </div>
-          <div id="text-prompt-content" class="tab-content hidden p-4 border rounded-lg">
+          <div id="text-prompt-content" class="tab-content hidden p-4 border border-gray-300 h-64 overflow-y-auto">
             <h3 class="font-bold text-lg mb-2">Text Prompt to 360° Image</h3>
             <p class="text-sm mb-4">The most unconstrained version of the problem, where a complete 360-degree scene is
               generated purely from a textual description, requiring the most generative power.</p>
             <h4 class="font-semibold mt-6 mb-2">Relevant Papers:</h4>
             <ul class="list-disc list-inside text-sm">
-              <li class="paper-item" data-highlight-target="#panodreamer-paper-highlight"><a
-                  href="https://arxiv.org/abs/2404.05152" target="_blank"
-                  title="PanoDreamer: Consistent Text to 360-Degree Scene Generation"
-                  class="text-blue-600 hover:underline">PanoDreamer</a>
-              </li>
-              <li class="paper-item" data-highlight-target="#panfusion-paper-highlight"><a
-                  href="https://arxiv.org/abs/2404.07949" target="_blank"
-                  title="PanFusion: Taming Stable Diffusion for Text to 360° Panorama Image Generation"
-                  class="text-blue-600 hover:underline">PanFusion</a></li>
+              <li class="paper-item" data-highlight-target="#panodreamer-paper-highlight">Paper 1</li>
+              <li class="paper-item" data-highlight-target="#panfusion-paper-highlight">Paper 2</li>
+              <li class="paper-item" data-highlight-target="#nerf-paper-highlight">Paper 3</li>
+              <li class="paper-item" data-highlight-target="#pixelnerf-paper-highlight">Paper 4</li>
             </ul>
             <button
               class="submit-paper-btn mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-semibold py-2 px-3 rounded-lg transition">
