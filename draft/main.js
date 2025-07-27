@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     animate();
   });
 
-  const zoomLink = 'https://zoom.us/j/1234567890'; // Placeholder Zoom link
+  const zoomLink = 'https://zoom.us/j/TODO'; // Placeholder Zoom link
 
   // Update main "Add to Calendar" link
   const mainCalendarLink = document.getElementById('main-calendar-link');
