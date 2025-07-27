@@ -11,8 +11,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (window.innerWidth < DESKTOP_BREAKPOINT) {
-      // Mobile: Direct scroll-to-play
+      // Mobile: Direct scroll-to-play, "primed" by the first touch
       video.pause();
+      const primeVideo = () => {
+        video.play();
+        video.pause();
+        // The event listener is removed so this only ever happens once.
+        document.body.removeEventListener('touchstart', primeVideo);
+      };
+      document.body.addEventListener('touchstart', primeVideo);
       window.addEventListener('scroll', scrollHandler);
     } else {
       // Desktop: Smoothed scroll-to-play
