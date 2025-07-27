@@ -349,6 +349,8 @@
 
     <section id="scene-completion-explainer" class="py-8 px-4 max-w-2xl mx-auto text-left">
       <h2 class="text-2xl font-bold mb-2 text-center">What is Scene Completion?</h2>
+      <p class="text-center text-sm text-yellow-600 bg-yellow-100 border border-yellow-300 rounded-md p-2 my-4">This is
+        a work in progress. 🙂 There are many placeholders.</p>
       <p class="text-center text-gray-500 italic mb-6">Reconstruct what you know, generate what you don't.</p>
       <p class="text-sm text-gray-600 mb-8 text-center">Scene completion takes an optional amount of conditioning
         information and
@@ -363,25 +365,29 @@
           <h4 class="font-semibold text-center mb-2">Tasks</h4>
           <div class="flex flex-col border border-gray-300 divide-y divide-gray-300">
             <button data-tab-target="#multi-image-content" data-highlight-class="multi-image-region"
-              class="tab-button p-3 text-left text-sm font-semibold">Multiple Images to 3D Scene</button>
+              class="tab-button p-3 text-left text-sm font-semibold">Multiple Images to Full 3D</button>
             <button data-tab-target="#single-image-content" data-highlight-class="single-image-region"
-              class="tab-button p-3 text-left text-sm font-semibold">Single Image to 360° Image</button>
+              class="tab-button p-3 text-left text-sm font-semibold">Single Image to 360°</button>
             <button data-tab-target="#text-prompt-content" data-highlight-class="text-prompt-region"
-              class="tab-button p-3 text-left text-sm font-semibold">Text Prompt to 360° Image</button>
+              class="tab-button p-3 text-left text-sm font-semibold">Text to 360°</button>
           </div>
         </div>
         <!-- Tab content -->
         <div class="w-2/3">
           <div id="multi-image-content" class="tab-content p-4 border border-gray-300 h-64 overflow-y-auto">
-            <h3 class="font-bold text-lg mb-2">Multiple Images to 3D Scene</h3>
-            <p class="text-sm mb-4">This task involves reconstructing a complete 3D scene from several input images,
-              often taken from different viewpoints. The goal is to fill in the gaps and unseen areas.</p>
+            <h3 class="font-bold text-lg mb-2">Multiple Images to Full 3D</h3>
+            <p class="text-sm mb-4">Description coming soon.</p>
             <h4 class="font-semibold mt-6 mb-2">Relevant Papers:</h4>
+            <p class="text-xs text-gray-500 italic mb-2">Hover over a paper to see its region on the graph.</p>
             <ul class="list-disc list-inside text-sm">
-              <li class="paper-item" data-highlight-target="#nerf-paper-highlight">Paper 1</li>
-              <li class="paper-item" data-highlight-target="#pixelnerf-paper-highlight">Paper 2</li>
-              <li class="paper-item" data-highlight-target="#panodiff-paper-highlight">Paper 3</li>
-              <li class="paper-item" data-highlight-target="#immersegan-paper-highlight">Paper 4</li>
+              <li class="paper-item" data-highlight-target="#nerf-paper-highlight"><a href="#"
+                  class="text-blue-600 hover:underline">Paper 1</a></li>
+              <li class="paper-item" data-highlight-target="#pixelnerf-paper-highlight"><a href="#"
+                  class="text-blue-600 hover:underline">Paper 2</a></li>
+              <li class="paper-item" data-highlight-target="#panodiff-paper-highlight"><a href="#"
+                  class="text-blue-600 hover:underline">Paper 3</a></li>
+              <li class="paper-item" data-highlight-target="#immersegan-paper-highlight"><a href="#"
+                  class="text-blue-600 hover:underline">Paper 4</a></li>
             </ul>
             <button
               class="submit-paper-btn mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-semibold py-2 px-3 rounded-lg transition">
@@ -389,15 +395,19 @@
             </button>
           </div>
           <div id="single-image-content" class="tab-content hidden p-4 border border-gray-300 h-64 overflow-y-auto">
-            <h3 class="font-bold text-lg mb-2">Single Image to 360° Image</h3>
-            <p class="text-sm mb-4">Also known as outpainting or panorama generation, this task aims to create a full
-              360-degree view from a single input image by generating the unseen portions.</p>
+            <h3 class="font-bold text-lg mb-2">Single Image to 360°</h3>
+            <p class="text-sm mb-4">Description coming soon.</p>
             <h4 class="font-semibold mt-6 mb-2">Relevant Papers:</h4>
+            <p class="text-xs text-gray-500 italic mb-2">Hover over a paper to see its region on the graph.</p>
             <ul class="list-disc list-inside text-sm">
-              <li class="paper-item" data-highlight-target="#panodiff-paper-highlight">Paper 1</li>
-              <li class="paper-item" data-highlight-target="#immersegan-paper-highlight">Paper 2</li>
-              <li class="paper-item" data-highlight-target="#panodreamer-paper-highlight">Paper 3</li>
-              <li class="paper-item" data-highlight-target="#panfusion-paper-highlight">Paper 4</li>
+              <li class="paper-item" data-highlight-target="#panodiff-paper-highlight"><a href="#"
+                  class="text-blue-600 hover:underline">Paper 1</a></li>
+              <li class="paper-item" data-highlight-target="#immersegan-paper-highlight"><a href="#"
+                  class="text-blue-600 hover:underline">Paper 2</a></li>
+              <li class="paper-item" data-highlight-target="#panodreamer-paper-highlight"><a href="#"
+                  class="text-blue-600 hover:underline">Paper 3</a></li>
+              <li class="paper-item" data-highlight-target="#panfusion-paper-highlight"><a href="#"
+                  class="text-blue-600 hover:underline">Paper 4</a></li>
             </ul>
             <button
               class="submit-paper-btn mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-semibold py-2 px-3 rounded-lg transition">
@@ -405,15 +415,19 @@
             </button>
           </div>
           <div id="text-prompt-content" class="tab-content hidden p-4 border border-gray-300 h-64 overflow-y-auto">
-            <h3 class="font-bold text-lg mb-2">Text Prompt to 360° Image</h3>
-            <p class="text-sm mb-4">The most unconstrained version of the problem, where a complete 360-degree scene is
-              generated purely from a textual description, requiring the most generative power.</p>
+            <h3 class="font-bold text-lg mb-2">Text to 360°</h3>
+            <p class="text-sm mb-4">Description coming soon.</p>
             <h4 class="font-semibold mt-6 mb-2">Relevant Papers:</h4>
+            <p class="text-xs text-gray-500 italic mb-2">Hover over a paper to see its region on the graph.</p>
             <ul class="list-disc list-inside text-sm">
-              <li class="paper-item" data-highlight-target="#panodreamer-paper-highlight">Paper 1</li>
-              <li class="paper-item" data-highlight-target="#panfusion-paper-highlight">Paper 2</li>
-              <li class="paper-item" data-highlight-target="#nerf-paper-highlight">Paper 3</li>
-              <li class="paper-item" data-highlight-target="#pixelnerf-paper-highlight">Paper 4</li>
+              <li class="paper-item" data-highlight-target="#panodreamer-paper-highlight"><a href="#"
+                  class="text-blue-600 hover:underline">Paper 1</a></li>
+              <li class="paper-item" data-highlight-target="#panfusion-paper-highlight"><a href="#"
+                  class="text-blue-600 hover:underline">Paper 2</a></li>
+              <li class="paper-item" data-highlight-target="#nerf-paper-highlight"><a href="#"
+                  class="text-blue-600 hover:underline">Paper 3</a></li>
+              <li class="paper-item" data-highlight-target="#pixelnerf-paper-highlight"><a href="#"
+                  class="text-blue-600 hover:underline">Paper 4</a></li>
             </ul>
             <button
               class="submit-paper-btn mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-semibold py-2 px-3 rounded-lg transition">
@@ -473,6 +487,54 @@
         onclick="document.getElementById('qrModal').style.display='none'">&times;</button>
       <h3 class="text-lg font-semibold mb-4">Scan to share this website</h3>
       <img src="assets/qrcode.png" alt="QR Code" class="w-full" />
+    </div>
+  </div>
+
+  <div id="submissionModal" class="fixed inset-0 bg-black bg-opacity-60 hidden justify-center items-center z-50">
+    <div class="bg-white p-8 rounded-lg max-w-2xl w-full text-left relative shadow-xl"
+      onclick="event.stopPropagation()">
+      <button id="closeSubmissionModal"
+        class="absolute top-2 right-3 text-3xl font-light text-gray-400 hover:text-gray-700">&times;</button>
+      <h3 class="text-xl font-semibold mb-4">Generate Paper Submission Snippet</h3>
+      <p class="text-sm text-gray-600 mb-6">Fill in your paper's details, draw its region on the plot, and then copy the
+        generated snippet to send to the organizers.</p>
+
+      <div class="grid grid-cols-2 gap-8">
+        <!-- Left side: Form inputs -->
+        <div class="space-y-4">
+          <div>
+            <label for="paperId" class="block text-sm font-medium text-gray-700">Unique ID</label>
+            <input type="text" id="paperId" placeholder="e.g., weber-2024-panodreamer"
+              class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          <div>
+            <label for="paperTitle" class="block text-sm font-medium text-gray-700">Paper Title</label>
+            <input type="text" id="paperTitle" placeholder="The full title of your paper"
+              class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          <div>
+            <label for="paperUrl" class="block text-sm font-medium text-gray-700">Paper URL</label>
+            <input type="url" id="paperUrl" placeholder="https://arxiv.org/abs/..."
+              class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-700 mt-2">Draw on Plot</p>
+            <p class="text-xs text-gray-500 italic">The plot becomes interactive when this form is open. Click and drag
+              to define your paper's region.</p>
+          </div>
+        </div>
+
+        <!-- Right side: Generated code -->
+        <div>
+          <label for="generatedCode" class="block text-sm font-medium text-gray-700">Generated Code Snippet to
+            Copy</label>
+          <textarea id="generatedCode" readonly
+            class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none h-48 font-mono text-xs resize-none"></textarea>
+          <button id="copyCodeBtn"
+            class="mt-2 w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 transition">Copy
+            to Clipboard</button>
+        </div>
+      </div>
     </div>
   </div>
 

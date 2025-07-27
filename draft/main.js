@@ -157,106 +157,153 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Paper submission interactive drawing logic.
+  // --- New Submission Modal Logic ---
+  const submissionModal = document.getElementById('submissionModal');
+  const closeSubmissionModalBtn = document.getElementById('closeSubmissionModal');
   const plotContainer = document.getElementById('shared-plot');
   const userDrawRegion = document.getElementById('user-draw-region');
-  const submitButtons = document.querySelectorAll('.submit-paper-btn');
+  
+  const paperIdInput = document.getElementById('paperId');
+  const paperTitleInput = document.getElementById('paperTitle');
+  const paperUrlInput = document.getElementById('paperUrl');
+  const generatedCodeTextarea = document.getElementById('generatedCode');
+  const copyCodeBtn = document.getElementById('copyCodeBtn');
 
+  let activeTaskInfo = null;
   let isDrawing = false;
   let startX, startY;
+  let drawState = { bottom: '0', left: '0', width: '0', height: '0' };
 
-  const getTaskFromButton = (button) => {
-    const tabContent = button.closest('.tab-content');
-    return tabContent.querySelector('h3').textContent;
+  const updateCodeSnippet = () => {
+    const id = paperIdInput.value.trim() || '[UNIQUE_ID]';
+    const title = paperTitleInput.value.trim() || '[PAPER_TITLE]';
+    const url = paperUrlInput.value.trim() || '[URL]';
+    const taskTitle = activeTaskInfo?.title || '[TASK_TITLE]';
+
+    const snippet = `
+/*
+  STEP 1: Paste this CSS inside the <style> tag in index.html (around line 99).
+*/
+.${id}-style {
+  bottom: ${drawState.bottom}%;
+  left: ${drawState.left}%;
+  width: ${drawState.width}%;
+  height: ${drawState.height}%;
+}
+
+/*
+  STEP 2: Paste this HTML into the paper list for the "${taskTitle}" task in index.html.
+*/
+<li class="paper-item" data-highlight-target="#${id}"><a href="${url}" target="_blank" title="${title}">${title}</a></li>
+
+/*
+  STEP 3: Paste this HTML inside the "shared-plot" div in index.html (around line 450).
+*/
+<div id="${id}" class="paper-highlight ${id}-style"></div>
+`;
+    generatedCodeTextarea.value = snippet.trim();
   };
 
-  submitButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      plotContainer.style.cursor = 'crosshair';
+  const openSubmissionModal = (button) => {
+    const tabContent = button.closest('.tab-content');
+    activeTaskInfo = {
+      id: tabContent.id,
+      title: tabContent.querySelector('h3').textContent
+    };
+    
+    submissionModal.querySelector('h3').textContent = `Generate Snippet for: ${activeTaskInfo.title}`;
+    submissionModal.style.display = 'flex';
+    plotContainer.style.cursor = 'crosshair';
+    document.addEventListener('mousedown', startDrawing);
+    updateCodeSnippet();
+  };
+
+  const closeSubmissionModal = () => {
+    submissionModal.style.display = 'none';
+    plotContainer.style.cursor = 'default';
+    activeTaskInfo = null;
+    document.removeEventListener('mousedown', startDrawing);
+    document.removeEventListener('mousemove', drawRectangle);
+    document.removeEventListener('mouseup', stopDrawing);
+    userDrawRegion.style.display = 'none';
+  };
+
+  const startDrawing = (e) => {
+    if (e.target.closest('#shared-plot')) {
+      e.preventDefault();
+      isDrawing = true;
       userDrawRegion.style.display = 'block';
-      userDrawRegion.style.opacity = '1';
+      const rect = plotContainer.getBoundingClientRect();
+      startX = e.clientX - rect.left;
+      startY = e.clientY - rect.top;
+      userDrawRegion.style.left = `${startX}px`;
+      userDrawRegion.style.top = `${startY}px`;
+      userDrawRegion.style.width = '0px';
+      userDrawRegion.style.height = '0px';
+      document.addEventListener('mousemove', drawRectangle);
+      document.addEventListener('mouseup', stopDrawing, { once: true });
+    }
+  };
 
-      // A one-time listener for the start of the drawing action.
-      const startDrawing = (e) => {
-        e.preventDefault();
-        isDrawing = true;
-        const rect = plotContainer.getBoundingClientRect();
-        startX = e.clientX - rect.left;
-        startY = e.clientY - rect.top;
-        userDrawRegion.style.left = `${startX}px`;
-        userDrawRegion.style.top = `${startY}px`;
-        userDrawRegion.style.width = '0px';
-        userDrawRegion.style.height = '0px';
+  const drawRectangle = (e) => {
+    if (!isDrawing) return;
+    const rect = plotContainer.getBoundingClientRect();
+    const currentX = e.clientX - rect.left;
+    const currentY = e.clientY - rect.top;
+    const width = currentX - startX;
+    const height = currentY - startY;
+    userDrawRegion.style.width = `${Math.abs(width)}px`;
+    userDrawRegion.style.height = `${Math.abs(height)}px`;
+    userDrawRegion.style.left = `${width > 0 ? startX : currentX}px`;
+    userDrawRegion.style.top = `${height > 0 ? startY : currentY}px`;
+  };
 
-        plotContainer.addEventListener('mousemove', drawRectangle);
-        plotContainer.addEventListener('mouseup', stopDrawing);
-        plotContainer.removeEventListener('mousedown', startDrawing); // Ensure this only runs once per click
-      };
+  const stopDrawing = () => {
+    if (!isDrawing) return;
+    isDrawing = false;
+    const plotWidth = plotContainer.offsetWidth;
+    const plotHeight = plotContainer.offsetHeight;
+    
+    const finalLeft = parseInt(userDrawRegion.style.left);
+    const finalTop = parseInt(userDrawRegion.style.top);
+    const finalWidth = parseInt(userDrawRegion.style.width);
+    const finalHeight = parseInt(userDrawRegion.style.height);
 
-      const drawRectangle = (e) => {
-        if (!isDrawing) return;
-        const rect = plotContainer.getBoundingClientRect();
-        const currentX = e.clientX - rect.left;
-        const currentY = e.clientY - rect.top;
+    drawState = {
+      left: (finalLeft / plotWidth * 100).toFixed(2),
+      bottom: ((plotHeight - finalTop - finalHeight) / plotHeight * 100).toFixed(2),
+      width: (finalWidth / plotWidth * 100).toFixed(2),
+      height: (finalHeight / plotHeight * 100).toFixed(2),
+    };
+    updateCodeSnippet();
+  };
 
-        const width = currentX - startX;
-        const height = currentY - startY;
-
-        userDrawRegion.style.width = `${Math.abs(width)}px`;
-        userDrawRegion.style.height = `${Math.abs(height)}px`;
-        userDrawRegion.style.left = `${width > 0 ? startX : currentX}px`;
-        userDrawRegion.style.top = `${height > 0 ? startY : currentY}px`;
-      };
-
-      const stopDrawing = () => {
-        if (!isDrawing) return;
-        isDrawing = false;
-        plotContainer.style.cursor = 'default';
-
-        // Calculate final position and size in percentages.
-        const plotWidth = plotContainer.offsetWidth;
-        const plotHeight = plotContainer.offsetHeight;
-
-        const leftPercent = (parseInt(userDrawRegion.style.left) / plotWidth * 100).toFixed(2);
-        const topPercent = (parseInt(userDrawRegion.style.top) / plotHeight * 100).toFixed(2);
-        const widthPercent = (parseInt(userDrawRegion.style.width) / plotWidth * 100).toFixed(2);
-        const heightPercent = (parseInt(userDrawRegion.style.height) / plotHeight * 100).toFixed(2);
-
-        // Reset the drawing region's style for the next use.
-        userDrawRegion.style.display = 'none';
-
-        // Create and trigger the mailto link.
-        const taskName = getTaskFromButton(button);
-        const subject = `Paper Submission for SceneComp: ${taskName}`;
-        const body = `
-          Hello SceneComp Organizers,
-
-          I would like to submit the following paper for consideration:
-
-          - Paper Title: [Your Paper Title]
-          - Authors: [List of Authors]
-          - Link to Paper (arXiv, etc.): [URL]
-          - Venue (e.g., CVPR 2024): [Conference/Journal]
-
-          ---
-          Interactive Plot Coordinates (auto-generated):
-          - Left: ${leftPercent}%
-          - Top: ${topPercent}%
-          - Width: ${widthPercent}%
-          - Height: ${heightPercent}%
-          ---
-
-          Thank you!
-        `;
-        window.open(`mailto:scenecomp@googlegroups.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
-
-        plotContainer.removeEventListener('mousemove', drawRectangle);
-        plotContainer.removeEventListener('mouseup', stopDrawing);
-      };
-
-      plotContainer.addEventListener('mousedown', startDrawing, { once: true });
-    });
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('submit-paper-btn')) {
+      openSubmissionModal(e.target);
+    }
   });
+
+  [paperIdInput, paperTitleInput, paperUrlInput].forEach(input => {
+    input.addEventListener('input', updateCodeSnippet);
+  });
+
+  copyCodeBtn.addEventListener('click', () => {
+    generatedCodeTextarea.select();
+    document.execCommand('copy');
+    copyCodeBtn.textContent = 'Copied!';
+    setTimeout(() => {
+      copyCodeBtn.textContent = 'Copy to Clipboard';
+    }, 2000);
+  });
+
+  closeSubmissionModalBtn.addEventListener('click', closeSubmissionModal);
+  submissionModal.addEventListener('click', (e) => {
+    if (e.target === submissionModal) {
+      closeSubmissionModal();
+    }
+  });
+  // --- End New Submission Modal Logic ---
 
   const talks = document.querySelectorAll('tbody tr');
   const eventDate = '20251020';
