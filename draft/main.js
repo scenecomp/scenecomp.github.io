@@ -1,34 +1,55 @@
 document.addEventListener('DOMContentLoaded', () => {
   const video = document.getElementById('scrollVideo');
-  let targetTime = 0;
-  const LERP_FACTOR = 0.1; // Controls smoothness: smaller is smoother
+  const DESKTOP_BREAKPOINT = 768;
+  let animationFrameId;
 
-  // Ensure the video is ready to play
+  const setupVideo = () => {
+    // Clean up previous listeners/loops
+    window.removeEventListener('scroll', scrollHandler);
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+    }
+
+    if (window.innerWidth < DESKTOP_BREAKPOINT) {
+      // Mobile: Direct scroll-to-play
+      video.pause();
+      window.addEventListener('scroll', scrollHandler);
+    } else {
+      // Desktop: Smoothed scroll-to-play
+      let targetTime = 0;
+      const LERP_FACTOR = 0.1;
+      video.pause();
+
+      window.addEventListener('scroll', () => {
+        const scrollableHeight = document.body.scrollHeight - window.innerHeight;
+        if (scrollableHeight <= 0) return;
+        targetTime = (window.scrollY / scrollableHeight) * video.duration;
+      });
+
+      const animate = () => {
+        const currentTime = video.currentTime;
+        const newTime = currentTime + (targetTime - currentTime) * LERP_FACTOR;
+        if (Math.abs(newTime - currentTime) > 0.01) {
+          video.currentTime = newTime;
+        }
+        animationFrameId = requestAnimationFrame(animate);
+      };
+      animate();
+    }
+  };
+
+  const scrollHandler = () => {
+    const scrollableHeight = document.body.scrollHeight - window.innerHeight;
+    if (scrollableHeight <= 0) return;
+    const scroll = window.scrollY / scrollableHeight;
+    if (video.duration) {
+      video.currentTime = video.duration * scroll;
+    }
+  };
+
   video.addEventListener('loadedmetadata', () => {
-    video.pause();
-    
-    // Set up scroll listener
-    window.addEventListener('scroll', () => {
-      const scrollableHeight = document.body.scrollHeight - window.innerHeight;
-      if (scrollableHeight <= 0) return;
-      targetTime = (window.scrollY / scrollableHeight) * video.duration;
-    });
-
-    // Animation loop for smooth playback
-    const animate = () => {
-      const currentTime = video.currentTime;
-      const newTime = currentTime + (targetTime - currentTime) * LERP_FACTOR;
-      
-      // Only update if there's a significant change
-      if (Math.abs(newTime - currentTime) > 0.01) {
-        video.currentTime = newTime;
-      }
-      
-      requestAnimationFrame(animate);
-    };
-
-    // Start the animation loop
-    animate();
+    setupVideo();
+    window.addEventListener('resize', setupVideo);
   });
 
   const zoomLink = 'https://zoom.us/j/TODO'; // Placeholder Zoom link
