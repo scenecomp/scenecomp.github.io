@@ -55,8 +55,38 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   video.addEventListener('loadedmetadata', () => {
-    setupVideo();
-    window.addEventListener('resize', setupVideo);
+    let targetTime = 0;
+    const LERP_FACTOR = 0.1; // Controls smoothness: smaller is smoother
+    video.pause();
+
+    // For mobile, "prime" the video on the first touch to enable scripting.
+    const primeVideo = () => {
+      if (video.paused) {
+        video.play();
+        video.pause();
+      }
+      document.body.removeEventListener('touchstart', primeVideo);
+    };
+    document.body.addEventListener('touchstart', primeVideo);
+
+    // Listen for scroll events to update the video's target time.
+    window.addEventListener('scroll', () => {
+      const scrollableHeight = document.body.scrollHeight - window.innerHeight;
+      if (scrollableHeight > 0 && video.duration) {
+        targetTime = (window.scrollY / scrollableHeight) * video.duration;
+      }
+    });
+
+    // Use an animation loop for smooth, interpolated playback.
+    const animate = () => {
+      const currentTime = video.currentTime;
+      const newTime = currentTime + (targetTime - currentTime) * LERP_FACTOR;
+      if (Math.abs(newTime - currentTime) > 0.01) {
+        video.currentTime = newTime;
+      }
+      requestAnimationFrame(animate);
+    };
+    animate();
   });
 
   const zoomLink = 'https://zoom.us/j/TODO'; // Placeholder Zoom link
