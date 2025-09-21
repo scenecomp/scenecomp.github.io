@@ -1,0 +1,17 @@
+CAT3D,0,16,35,65,https://arxiv.org/abs/2406.00000
+RealMDreamer,1,2,25,45,https://arxiv.org/abs/2312.00000
+NerfBusters,32,100,15,30,https://arxiv.org/abs/2305.00000
+ReconFusion,32,100,25,45,https://arxiv.org/abs/2401.00000
+Stable Virtual Camera,64,100,8,20,https://arxiv.org/abs/2402.00000
+Zero-1-to-3,1,2,65,90,https://arxiv.org/abs/2303.00000
+DreamFusion,0,1,70,95,https://arxiv.org/abs/2209.00000
+Instant3D,1,2,50,75,https://arxiv.org/abs/2311.00000
+MVDream,0,1,60,85,https://arxiv.org/abs/2312.00001
+PixelNeRF,1,8,20,40,https://arxiv.org/abs/2012.00000
+SparseFusion,4,16,45,75,https://arxiv.org/abs/2207.00000
+Magic3D,0,1,60,90,https://arxiv.org/abs/2211.00000
+One-2-3-45,1,2,70,90,https://arxiv.org/abs/2302.00000
+SyncDreamer,1,8,35,55,https://arxiv.org/abs/2309.00000
+GaussianDreamer,16,64,30,50,https://arxiv.org/abs/2403.00000
+Neuralangelo,64,100,10,25,https://arxiv.org/abs/2306.00000
+

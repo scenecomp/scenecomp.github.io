@@ -14,278 +14,743 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Delius&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Delius', cursive;
+            font-family: 'Inter', sans-serif;
         }
 
-        .highlight-region {
-            position: absolute;
-            background-color: rgba(59, 130, 246, 0.4);
-            border: 2px solid rgba(37, 99, 235, 0.6);
-            border-radius: 0.25rem;
+        .chart-container {
+            background: linear-gradient(135deg, 
+                rgba(249, 250, 255, 1) 0%, 
+                rgba(243, 244, 250, 1) 50%, 
+                rgba(237, 238, 248, 1) 100%);
+            border: 1px solid rgba(209, 213, 230, 0.5);
+            box-shadow: 
+                inset 0 0 20px rgba(59, 130, 246, 0.03),
+                inset 0 0 40px rgba(168, 85, 247, 0.02);
+            isolation: isolate;
         }
 
-        .paper-highlight {
+        .task-region {
             position: absolute;
-            background-color: rgba(239, 68, 68, 0.5);
-            border: 2px solid rgba(185, 28, 28, 0.7);
-            border-radius: 0.25rem;
-            opacity: 0;
-            transition: opacity 0.2s ease-in-out;
+            border: 2px solid;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-align: center;
+            padding: 0.5rem;
+            z-index: 1;
+        }
+
+        .task-region:hover {
+            z-index: 2;
+            transform: scale(1.03);
+            box-shadow: 
+                0 20px 25px -5px rgba(0, 0, 0, 0.1),
+                0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-width: 2.5px;
+        }
+
+        /* Text-to-3D - zero views only, full height */
+        .text-to-3d-region {
+            bottom: 5%;
+            left: 5%;
+            width: 22%;
+            height: 90%;
+            background: linear-gradient(135deg, 
+                rgba(251, 113, 133, 0.15) 0%, 
+                rgba(244, 63, 94, 0.08) 100%);
+            border-color: rgb(244, 63, 94);
+            color: rgb(190, 18, 60);
+            border-radius: 0.75rem 0 0 0.75rem;
+            backdrop-filter: blur(2px);
+            box-shadow: 
+                0 4px 6px rgba(244, 63, 94, 0.1),
+                inset 0 0 20px rgba(244, 63, 94, 0.05);
+        }
+
+        /* Sparse View Synthesis - 1 to 16 views, full height */
+        .sparse-view-region {
+            bottom: 5%;
+            left: 27%;
+            width: 23%;
+            height: 90%;
+            background: linear-gradient(135deg, 
+                rgba(192, 132, 252, 0.15) 0%, 
+                rgba(147, 51, 234, 0.08) 100%);
+            border-color: rgb(147, 51, 234);
+            color: rgb(107, 33, 168);
+            border-radius: 0;
+            backdrop-filter: blur(2px);
+            box-shadow: 
+                0 4px 6px rgba(147, 51, 234, 0.1),
+                inset 0 0 20px rgba(147, 51, 234, 0.05);
+        }
+
+        /* Novel View Synthesis - many views, bottom half */
+        .nvs-region {
+            bottom: 5%;
+            left: 50%;
+            width: 45%;
+            height: 45%;
+            background: linear-gradient(135deg, 
+                rgba(96, 165, 250, 0.15) 0%, 
+                rgba(59, 130, 246, 0.08) 100%);
+            border-color: rgb(37, 99, 235);
+            color: rgb(29, 78, 216);
+            border-radius: 0 0 0.75rem 0;
+            backdrop-filter: blur(2px);
+            box-shadow: 
+                0 4px 6px rgba(59, 130, 246, 0.1),
+                inset 0 0 20px rgba(59, 130, 246, 0.05);
+        }
+
+        /* Scene Completion - many views, top half */
+        .completion-region {
+            bottom: 50%;
+            left: 50%;
+            width: 45%;
+            height: 45%;
+            background: linear-gradient(135deg, 
+                rgba(52, 211, 153, 0.15) 0%, 
+                rgba(16, 185, 129, 0.08) 100%);
+            border-color: rgb(16, 185, 129);
+            color: rgb(5, 150, 105);
+            border-radius: 0 0.75rem 0 0;
+            backdrop-filter: blur(2px);
+            box-shadow: 
+                0 4px 6px rgba(16, 185, 129, 0.1),
+                inset 0 0 20px rgba(16, 185, 129, 0.05);
+        }
+
+        .task-region.active {
+            transform: scale(1.02);
+            border-width: 3px;
+            filter: brightness(1.15) saturate(1.3);
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.25),
+                inset 0 0 30px rgba(255, 255, 255, 0.15);
+        }
+
+        .paper-marker {
+            position: absolute;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 20;
+            transform: translate(-50%, -50%);
+            background: none;
+            border: none;
+            box-shadow: none;
+            animation: subtle-glow 3s ease-in-out infinite;
+        }
+        
+        @keyframes subtle-glow {
+            0%, 100% { filter: saturate(1.2) brightness(1.05); }
+            50% { filter: saturate(1.4) brightness(1.15); }
+        }
+
+        .paper-marker svg {
+            overflow: visible;
+            pointer-events: none;
+            display: block;
+        }
+
+        .gaussian-ellipse {
+            mix-blend-mode: screen;
             pointer-events: none;
         }
 
-        .paper-item:hover .paper-highlight {
-            opacity: 1;
+        .paper-center-dot {
+            stroke: #ffffff;
+            stroke-width: 1.5px;
         }
 
-        /* Multiple Images: Many views, low-to-medium generation. */
-        .multi-image-region {
-            bottom: 10%;
-            left: 40%;
-            width: 55%;
-            height: 40%;
+        /* Color-coded by task type - vibrant colors */
+        .paper-marker[data-tasks*="text-to-3d"] { 
+            color: #f43f5e;
+        }
+        .paper-marker[data-tasks*="sparse-view"] { 
+            color: #9333ea;
+        }
+        .paper-marker[data-tasks*="nvs"] { 
+            color: #2563eb;
+        }
+        .paper-marker[data-tasks*="completion"] { 
+            color: #10b981;
         }
 
-        /* Single Image: "One" view, medium-to-high generation. */
-        .single-image-region {
-            bottom: 10%;
-            left: 15%;
-            width: 10%;
-            height: 60%;
+        /* Multi-task papers get a special treatment - gradient color */
+        .paper-marker[data-tasks*=","] {
+            color: #f59e0b;
+            animation: subtle-glow 2.5s ease-in-out infinite;
         }
 
-        /* Text Prompt: "Zero" views, high generation. */
-        .text-prompt-region {
-            bottom: 10%;
-            left: 2%;
-            width: 10%;
-            height: 80%;
+        .paper-marker:hover {
+            transform: translate(-50%, -50%) scale(1.05);
+            z-index: 25;
         }
 
-        /* Paper-specific highlight regions */
-        .nerf-paper {
-            bottom: 20%;
-            left: 70%;
-            width: 15%;
-            height: 15%;
+        .paper-marker.active {
+            transform: translate(-50%, -50%) scale(1.2);
+            z-index: 25;
+            animation: none;
         }
 
-        .pixelnerf-paper {
-            bottom: 15%;
+        @keyframes spin {
+            from { transform: rotate(45deg) scale(1); }
+            to { transform: rotate(405deg) scale(1.8); }
+        }
+
+        .paper-marker.filtered-out {
+            opacity: 0.2;
+            filter: grayscale(100%);
+            pointer-events: none;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white;
+            padding: 0.625rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
             left: 50%;
-            width: 15%;
-            height: 20%;
+            top: 0;
+            transform: translate(-50%, -150%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 20px 25px -5px rgba(0, 0, 0, 0.3),
+                0 10px 10px -5px rgba(0, 0, 0, 0.2),
+                inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
         }
 
-        .panodiff-paper {
-            bottom: 40%;
-            left: 18%;
-            width: 5%;
-            height: 25%;
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #0f172a;
         }
 
-        .immersegan-paper {
+        .paper-marker:hover .tooltip {
+            opacity: 1;
+            transform: translate(-50%, -140%);
+        }
+
+        /* Paper-specific positions - distributed to avoid title areas */
+        
+        /* Text-to-3D papers (region: 5-27%) */
+        .dreamfusion-marker {
+            /* Text only, highest hallucination */
+            bottom: 85%;
+            left: 10%;
+        }
+
+        .mvdream-marker {
+            /* Text to multi-view, high hallucination */
+            bottom: 75%;
+            left: 22%;
+        }
+        
+        /* Sparse View papers (region: 27-50%) */
+        .zero123-marker {
+            /* Single view, high hallucination */
+            bottom: 80%;
+            left: 30%;
+        }
+        
+        .instant3d-marker {
+            /* Single view, medium-high hallucination */
+            bottom: 65%;
+            left: 32%;
+        }
+        
+        .realmdreamer-marker {
+            /* One view, medium hallucination */
             bottom: 30%;
-            left: 16%;
-            width: 7%;
-            height: 35%;
+            left: 29%;
         }
-
-        .panodreamer-paper {
+        
+        .pixelnerf-marker {
+            /* Few views, medium hallucination */
+            bottom: 25%;
+            left: 45%;
+        }
+        
+        .cat3d-marker {
+            /* Can work with any number of views (0 to many) and variable hallucination */
             bottom: 70%;
-            left: 4%;
-            width: 5%;
-            height: 15%;
+            left: 47%;
         }
 
-        .panfusion-paper {
+        .sparsefusion-marker {
+            /* Sparse views, medium-high hallucination */
             bottom: 60%;
-            left: 3%;
-            width: 6%;
-            height: 20%;
+            left: 48%;
+        }
+
+        /* Novel View Synthesis papers (region: 50-95%, bottom half) */
+        .nerfbusters-marker {
+            /* Many images, medium hallucination */
+            bottom: 20%;
+            left: 55%;
+        }
+
+        .reconfusion-marker {
+            /* Many views, low-medium hallucination */
+            bottom: 35%;
+            left: 75%;
+        }
+
+        .stable-virtual-camera-marker {
+            /* Many views, low hallucination */
+            bottom: 10%;
+            left: 90%;
+        }
+
+        .paper-list-item {
+            padding: 1rem;
+            margin: 0.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            background: white;
+            border: 1px solid #e5e7eb;
+        }
+
+        .paper-list-item:hover {
+            background-color: #f9fafb;
+            border-color: #d1d5db;
+            transform: translateX(4px);
+        }
+
+        .paper-list-item.active {
+            background-color: #fee2e2;
+            border-color: #dc2626;
+            border-width: 2px;
+            transform: translateX(4px);
+        }
+
+        .paper-list-item.hidden {
+            display: none;
+        }
+
+        .filter-status {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+            display: none;
+        }
+
+        .filter-status.active {
+            display: block;
+        }
+
+        .filter-status .clear-filter {
+            color: #2563eb;
+            cursor: pointer;
+            text-decoration: underline;
+            font-weight: 500;
+        }
+
+        .filter-status .clear-filter:hover {
+            color: #1d4ed8;
+        }
+
+        .axis-line {
+            position: absolute;
+            background: linear-gradient(90deg, #4b5563 0%, #6b7280 50%, #4b5563 100%);
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .axis-line.x-axis {
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2.5px;
+        }
+
+        .axis-line.y-axis {
+            bottom: 0;
+            left: 0;
+            width: 2.5px;
+            height: 100%;
+        }
+
+        .axis-label {
+            position: absolute;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1f2937;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+        }
+
+        .axis-tick {
+            position: absolute;
+            background: linear-gradient(180deg, #4b5563 0%, #6b7280 100%);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .x-tick {
+            bottom: -4px;
+            width: 2px;
+            height: 8px;
+        }
+
+        .y-tick {
+            left: -4px;
+            height: 2px;
+            width: 8px;
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            display: inline-block;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+        
+        .tag:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Mobile responsive styles */
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px !important;
+            }
+
+            .task-region {
+                font-size: 0.625rem;
+                padding: 0.25rem;
+            }
+
+            .task-region .font-bold {
+                font-size: 0.625rem;
+            }
+
+            .task-region .text-xs {
+                font-size: 0.5rem;
+            }
+
+            /* Do NOT fix width/height on markers; they must size to their SVG for correct centering */
+            .paper-marker {
+                width: auto;
+                height: auto;
+            }
+
+            .axis-label {
+                font-size: 0.625rem;
+            }
+
+            /* Keep tick shape consistent at all widths */
+            .x-tick { height: 8px; width: 2px; }
+            .y-tick { width: 8px; height: 2px; }
+
+            /* No mobile-hide behavior for x-axis labels/ticks to avoid discontinuities */
+            .axis-label.mobile-hide { display: inline-block; }
+
+            /* Adjust y-axis title position */
+            .y-axis-title {
+                left: -80px !important;
+                font-size: 0.625rem;
+            }
+
+            /* Keep task region widths readable on mobile */
+
+            .paper-list-item {
+                padding: 0.75rem;
+                margin: 0.25rem;
+            }
+
+            .paper-list-item h4 {
+                font-size: 0.875rem;
+            }
+
+            .paper-list-item p {
+                font-size: 0.75rem;
+            }
+
+            .tag {
+                font-size: 0.625rem;
+                padding: 0.125rem 0.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .chart-container {
+                height: 250px !important;
+            }
+
+            /* Even smaller adjustments for very small screens */
+            .task-region {
+                font-size: 0.5rem;
+            }
+
+            .axis-label {
+                font-size: 0.5rem;
+            }
         }
     </style>
 </head>
 
-<body class="font-sans bg-gray-50 text-gray-900">
+<body class="bg-gray-50 text-gray-900">
     <main>
-        <section class="py-8 px-4 max-w-2xl mx-auto text-left">
-            <div class="flex items-center justify-between">
-                <h1 class="text-3xl font-bold">Interactive Tasks Explainer</h1>
-                <a href="index.html" class="text-blue-600 hover:underline">← Back to home</a>
-            </div>
-            <p class="text-center text-gray-500 italic mt-2 mb-6">Reconstruct what you know, generate what you don't.
-            </p>
-
-            <div class="flex space-x-8">
-                <!-- Tab buttons -->
-                <div class="w-1/3">
-                    <h4 class="font-semibold text-center mb-2">Tasks</h4>
-                    <div class="flex flex-col border border-gray-300 divide-y divide-gray-300">
-                        <button data-tab-target="#multi-image-content" data-highlight-class="multi-image-region"
-                            class="tab-button p-3 text-left text-sm font-semibold">Multiple Images to Full 3D</button>
-                        <button data-tab-target="#single-image-content" data-highlight-class="single-image-region"
-                            class="tab-button p-3 text-left text-sm font-semibold">Single Image to 360°</button>
-                        <button data-tab-target="#text-prompt-content" data-highlight-class="text-prompt-region"
-                            class="tab-button p-3 text-left text-sm font-semibold">Text to 360°</button>
-                    </div>
+        <section class="py-4 sm:py-8 px-4 max-w-7xl mx-auto">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-8">
+                <div>
+                    <h1 class="text-2xl sm:text-4xl font-bold text-gray-900">Scene Composition Tasks</h1>
+                    <p class="text-gray-500 mt-1 sm:mt-2 text-sm sm:text-base">Reconstruct what you know, generate what you don't.</p>
                 </div>
-                <!-- Tab content -->
-                <div class="w-2/3">
-                    <div id="multi-image-content" class="tab-content p-4 border border-gray-300 h-64 overflow-y-auto">
-                        <h3 class="font-bold text-lg mb-2">Multiple Images to Full 3D</h3>
-                        <p class="text-sm mb-4">Description coming soon.</p>
-                        <h4 class="font-semibold mt-6 mb-2">Relevant Papers:</h4>
-                        <p class="text-xs text-gray-500 italic mb-2">Hover over a paper to see its region on the graph.
-                        </p>
-                        <ul class="list-disc list-inside text-sm">
-                            <li class="paper-item" data-highlight-target="#nerf-paper-highlight"><a href="#"
-                                    class="text-blue-600 hover:underline">Paper 1</a></li>
-                            <li class="paper-item" data-highlight-target="#pixelnerf-paper-highlight"><a href="#"
-                                    class="text-blue-600 hover:underline">Paper 2</a></li>
-                            <li class="paper-item" data-highlight-target="#panodiff-paper-highlight"><a href="#"
-                                    class="text-blue-600 hover:underline">Paper 3</a></li>
-                            <li class="paper-item" data-highlight-target="#immersegan-paper-highlight"><a href="#"
-                                    class="text-blue-600 hover:underline">Paper 4</a></li>
-                        </ul>
-                        <button
-                            class="submit-paper-btn mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-semibold py-2 px-3 rounded-lg transition">
-                            Submit a Paper
-                        </button>
-                    </div>
-                    <div id="single-image-content"
-                        class="tab-content hidden p-4 border border-gray-300 h-64 overflow-y-auto">
-                        <h3 class="font-bold text-lg mb-2">Single Image to 360°</h3>
-                        <p class="text-sm mb-4">Description coming soon.</p>
-                        <h4 class="font-semibold mt-6 mb-2">Relevant Papers:</h4>
-                        <p class="text-xs text-gray-500 italic mb-2">Hover over a paper to see its region on the graph.
-                        </p>
-                        <ul class="list-disc list-inside text-sm">
-                            <li class="paper-item" data-highlight-target="#panodiff-paper-highlight"><a href="#"
-                                    class="text-blue-600 hover:underline">Paper 1</a></li>
-                            <li class="paper-item" data-highlight-target="#immersegan-paper-highlight"><a href="#"
-                                    class="text-blue-600 hover:underline">Paper 2</a></li>
-                            <li class="paper-item" data-highlight-target="#panodreamer-paper-highlight"><a href="#"
-                                    class="text-blue-600 hover:underline">Paper 3</a></li>
-                            <li class="paper-item" data-highlight-target="#panfusion-paper-highlight"><a href="#"
-                                    class="text-blue-600 hover:underline">Paper 4</a></li>
-                        </ul>
-                        <button
-                            class="submit-paper-btn mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-semibold py-2 px-3 rounded-lg transition">
-                            Submit a Paper
-                        </button>
-                    </div>
-                    <div id="text-prompt-content"
-                        class="tab-content hidden p-4 border border-gray-300 h-64 overflow-y-auto">
-                        <h3 class="font-bold text-lg mb-2">Text to 360°</h3>
-                        <p class="text-sm mb-4">Description coming soon.</p>
-                        <h4 class="font-semibold mt-6 mb-2">Relevant Papers:</h4>
-                        <p class="text-xs text-gray-500 italic mb-2">Hover over a paper to see its region on the graph.
-                        </p>
-                        <ul class="list-disc list-inside text-sm">
-                            <li class="paper-item" data-highlight-target="#panodreamer-paper-highlight"><a href="#"
-                                    class="text-blue-600 hover:underline">Paper 1</a></li>
-                            <li class="paper-item" data-highlight-target="#panfusion-paper-highlight"><a href="#"
-                                    class="text-blue-600 hover:underline">Paper 2</a></li>
-                            <li class="paper-item" data-highlight-target="#nerf-paper-highlight"><a href="#"
-                                    class="text-blue-600 hover:underline">Paper 3</a></li>
-                            <li class="paper-item" data-highlight-target="#pixelnerf-paper-highlight"><a href="#"
-                                    class="text-blue-600 hover:underline">Paper 4</a></li>
-                        </ul>
-                        <button
-                            class="submit-paper-btn mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-semibold py-2 px-3 rounded-lg transition">
-                            Submit a Paper
-                        </button>
-                    </div>
-                </div>
+                <a href="index.html" class="text-blue-600 hover:text-blue-800 font-medium text-sm sm:text-base mt-2 sm:mt-0">← Back to home</a>
             </div>
 
-            <!-- Shared Plot -->
-            <div id="shared-plot"
-                class="plot-container relative w-full h-56 border-l-2 border-b-2 border-gray-400 mt-8">
-                <span
-                    class="absolute -left-20 top-1/2 -translate-y-1/2 -rotate-90 text-sm text-gray-600 whitespace-nowrap">Generated
-                    Content</span>
-                <span
-                    class="absolute bottom-[-2.5rem] left-1/2 -translate-x-1/2 text-sm text-gray-600 whitespace-nowrap">Input
-                    Views</span>
-                <div id="plot-highlight-region" class="highlight-region"></div>
-                <div id="nerf-paper-highlight" class="paper-highlight nerf-paper"></div>
-                <div id="pixelnerf-paper-highlight" class="paper-highlight pixelnerf-paper"></div>
-                <div id="panodiff-paper-highlight" class="paper-highlight panodiff-paper"></div>
-                <div id="immersegan-paper-highlight" class="paper-highlight immersegan-paper"></div>
-                <div id="panodreamer-paper-highlight" class="paper-highlight panodreamer-paper"></div>
-                <div id="panfusion-paper-highlight" class="paper-highlight panfusion-paper"></div>
-                <!-- This div will be used for drawing the new paper's region -->
-                <div id="user-draw-region" class="paper-highlight" style="display: none;"></div>
-                <!-- X-axis labels -->
-                <span class="absolute bottom-[-1.5rem] left-[2%] -translate-x-1/2 text-xs text-gray-500">0</span>
-                <span class="absolute bottom-[-1.5rem] left-[15%] -translate-x-1/2 text-xs text-gray-500">1</span>
-                <span class="absolute bottom-[-1.5rem] left-[25%] -translate-x-1/2 text-xs text-gray-500">2</span>
-                <span class="absolute bottom-[-1.5rem] left-[35%] -translate-x-1/2 text-xs text-gray-500">4</span>
-                <span class="absolute bottom-[-1.5rem] left-[45%] -translate-x-1/2 text-xs text-gray-500">8</span>
-                <span class="absolute bottom-[-1.5rem] left-[55%] -translate-x-1/2 text-xs text-gray-500">16</span>
-                <span class="absolute bottom-[-1.5rem] left-[65%] -translate-x-1/2 text-xs text-gray-500">32</span>
-                <span class="absolute bottom-[-1.5rem] left-[75%] -translate-x-1/2 text-xs text-gray-500">64</span>
-                <span class="absolute bottom-[-1.5rem] left-[85%] -translate-x-1/2 text-xs text-gray-500">128</span>
-                <span class="absolute bottom-[-1.5rem] left-[95%] -translate-x-1/2 text-xs text-gray-500">...</span>
-                <!-- Plot region labels -->
-                <span class="absolute top-2 left-2 text-xs text-gray-500">Scene Synthesis</span>
-                <span class="absolute top-2 right-2 text-xs text-gray-500">Scene Completion</span>
-                <span class="absolute bottom-2 right-2 text-xs text-gray-500">Novel-view Synthesis</span>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
+                <!-- Chart Section -->
+                <div class="col-span-1 lg:col-span-2">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-8 overflow-visible">
+                        <div id="shared-plot" class="relative h-64 sm:h-96 chart-container rounded-lg p-2 sm:p-4 ml-12 sm:ml-20 mb-8 sm:mb-12">
+                            <!-- Axis lines -->
+                            <div class="axis-line x-axis"></div>
+                            <div class="axis-line y-axis"></div>
+
+                            <!-- Y-axis label and ticks -->
+                            <span class="axis-label y-axis-title" style="left: -160px; top: 50%; transform: translateY(-50%) rotate(-90deg); transform-origin: center;">
+                                Extrapolation Required
+                            </span>
+                            <div class="axis-tick y-tick" style="bottom: 10%;"></div>
+                            <div class="axis-tick y-tick" style="bottom: 50%;"></div>
+                            <div class="axis-tick y-tick" style="bottom: 90%;"></div>
+                            <span class="axis-label" style="left: -35px; bottom: 8%;">Low</span>
+                            <span class="axis-label" style="left: -35px; bottom: 48%;">Med</span>
+                            <span class="axis-label" style="left: -35px; bottom: 88%;">High</span>
+
+                            <!-- X-axis label and ticks -->
+                            <span class="axis-label" style="bottom: -40px; left: 50%; transform: translateX(-50%);">
+                                Number of Input Views
+                            </span>
+                            <div class="axis-tick x-tick" style="left: 16%;"></div>
+                            <div class="axis-tick x-tick" style="left: 27%;"></div>
+                            <div class="axis-tick x-tick" style="left: 50%;"></div>
+                            <div class="axis-tick x-tick" style="left: 65%;"></div>
+                            <div class="axis-tick x-tick" style="left: 80%;"></div>
+                            <div class="axis-tick x-tick" style="left: 95%;"></div>
+                            <span class="axis-label" style="bottom: -25px; left: 16%; transform: translateX(-50%);">0</span>
+                            <span class="axis-label" style="bottom: -25px; left: 27%; transform: translateX(-50%);">1</span>
+                            <span class="axis-label" style="bottom: -25px; left: 50%; transform: translateX(-50%);">16</span>
+                            <span class="axis-label" style="bottom: -25px; left: 65%; transform: translateX(-50%);">32</span>
+                            <span class="axis-label" style="bottom: -25px; left: 80%; transform: translateX(-50%);">64</span>
+                            <span class="axis-label" style="bottom: -25px; left: 95%; transform: translateX(-50%);">100+</span>
+
+                            <!-- Task regions -->
+                            <div class="task-region text-to-3d-region" data-task="text-to-3d">
+                                <div>
+                                    <div class="font-bold mb-1">Text-to-3D</div>
+                                    <div class="text-xs opacity-75">0 views</div>
+                                </div>
+                            </div>
+                            <div class="task-region sparse-view-region" data-task="sparse-view">
+                                <div>
+                                    <div class="font-bold mb-1">Sparse View<br/>Synthesis</div>
+                                    <div class="text-xs opacity-75">1-16 views</div>
+                                </div>
+                            </div>
+                            <div class="task-region nvs-region" data-task="nvs">
+                                <div>
+                                    <div class="font-bold mb-1">Novel View Synthesis</div>
+                                    <div class="text-xs opacity-75">Many views, interpolation</div>
+                                </div>
+                            </div>
+                            <div class="task-region completion-region" data-task="completion">
+                                <div>
+                                    <div class="font-bold mb-1">Scene Completion</div>
+                                    <div class="text-xs opacity-75">Many views, extrapolation</div>
+                                </div>
+                            </div>
+
+                            <!-- Paper markers loaded from papers.txt -->
+                            <script id="papersTxt" type="text/plain">
+CAT3D,0,16,35,65,https://arxiv.org/abs/2406.00000
+RealMDreamer,1,2,25,45,https://arxiv.org/abs/2312.00000
+NerfBusters,32,100,15,30,https://arxiv.org/abs/2305.00000
+ReconFusion,32,100,25,45,https://arxiv.org/abs/2401.00000
+Stable Virtual Camera,64,100,8,20,https://arxiv.org/abs/2402.00000
+Zero-1-to-3,1,2,65,90,https://arxiv.org/abs/2303.00000
+DreamFusion,0,1,70,95,https://arxiv.org/abs/2209.00000
+Instant3D,1,2,50,75,https://arxiv.org/abs/2311.00000
+MVDream,0,1,60,85,https://arxiv.org/abs/2312.00001
+PixelNeRF,1,8,20,40,https://arxiv.org/abs/2012.00000
+SparseFusion,4,16,45,75,https://arxiv.org/abs/2207.00000
+Magic3D,0,1,60,90,https://arxiv.org/abs/2211.00000
+One-2-3-45,1,2,70,90,https://arxiv.org/abs/2302.00000
+SyncDreamer,1,8,35,55,https://arxiv.org/abs/2309.00000
+GaussianDreamer,16,64,30,50,https://arxiv.org/abs/2403.00000
+Neuralangelo,64,100,10,25,https://arxiv.org/abs/2306.00000
+                            </script>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Papers List -->
+                <div class="col-span-1 lg:col-span-1">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+                    <h3 class="text-lg sm:text-xl font-bold mb-2 sm:mb-4">Representative Papers</h3>
+                    <p class="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6">Click on a paper to highlight its position on the chart.</p>
+                    
+                    <div class="filter-status" id="filterStatus">
+                        <span id="filterText"></span>
+                        <span class="clear-filter" id="clearFilter">Show all papers</span>
+                    </div>
+                        
+                        <div id="papersList" class="space-y-2 sm:space-y-3 max-h-64 sm:max-h-96 overflow-y-auto pr-1 sm:pr-2">
+                            <div class="paper-list-item" data-paper="cat3d">
+                                <h4 class="font-semibold text-gray-900">CAT3D</h4>
+                                <p class="text-sm text-gray-600 mt-1 mb-3">Multi-view to 3D synthesis with controllable generation</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="tag" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #be123c;">Text-to-3D</span>
+                                    <span class="tag" style="background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); color: #7e22ce;">Sparse View</span>
+                                    <span class="tag" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e3a8a;">Novel View</span>
+                                    <span class="tag" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #059669;">Scene Completion</span>
+                                </div>
+                            </div>
+                            
+                            <div class="paper-list-item" data-paper="realmdreamer">
+                                <h4 class="font-semibold text-gray-900">RealMDreamer</h4>
+                                <p class="text-sm text-gray-600 mt-1 mb-3">Single image to 360° scene generation</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="tag" style="background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); color: #7e22ce;">Sparse View</span>
+                                </div>
+                            </div>
+                            
+                            <div class="paper-list-item" data-paper="reconfusion">
+                                <h4 class="font-semibold text-gray-900">ReconFusion</h4>
+                                <p class="text-sm text-gray-600 mt-1 mb-3">3D reconstruction from multi-view diffusion</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="tag" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e3a8a;">Novel View</span>
+                                </div>
+                            </div>
+                            
+                            <div class="paper-list-item" data-paper="stable-virtual-camera">
+                                <h4 class="font-semibold text-gray-900">Stable Virtual Camera</h4>
+                                <p class="text-sm text-gray-600 mt-1 mb-3">Stable novel view synthesis from video</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="tag" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e3a8a;">Novel View</span>
+                                </div>
+                            </div>
+                            
+                            <div class="paper-list-item" data-paper="zero123">
+                                <h4 class="font-semibold text-gray-900">Zero-1-to-3</h4>
+                                <p class="text-sm text-gray-600 mt-1 mb-3">Zero-shot single image to 3D object</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="tag" style="background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); color: #7e22ce;">Sparse View</span>
+                                </div>
+                            </div>
+                            
+                            <div class="paper-list-item" data-paper="dreamfusion">
+                                <h4 class="font-semibold text-gray-900">DreamFusion</h4>
+                                <p class="text-sm text-gray-600 mt-1 mb-3">Text-to-3D using 2D diffusion</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="tag" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #be123c;">Text-to-3D</span>
+                                </div>
+                            </div>
+                            
+                            <div class="paper-list-item" data-paper="mvdream">
+                                <h4 class="font-semibold text-gray-900">MVDream</h4>
+                                <p class="text-sm text-gray-600 mt-1 mb-3">Multi-view consistent text-to-3D generation</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="tag" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #be123c;">Text-to-3D</span>
+                                </div>
+                            </div>
+                            
+                            <div class="paper-list-item" data-paper="pixelnerf">
+                                <h4 class="font-semibold text-gray-900">PixelNeRF</h4>
+                                <p class="text-sm text-gray-600 mt-1 mb-3">Neural radiance fields from one or few images</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="tag" style="background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); color: #7e22ce;">Sparse View</span>
+                                </div>
+                            </div>
+                            
+                            <div class="paper-list-item" data-paper="sparsefusion">
+                                <h4 class="font-semibold text-gray-900">SparseFusion</h4>
+                                <p class="text-sm text-gray-600 mt-1 mb-3">Sparse view 3D reconstruction with diffusion</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="tag" style="background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); color: #7e22ce;">Sparse View</span>
+                                    <span class="tag" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #059669;">Scene Completion</span>
+                                </div>
+                    </div>
+                        </div>
+                        
+                        <button class="submit-paper-btn mt-4 sm:mt-6 w-full bg-gray-900 hover:bg-gray-800 text-white text-sm sm:text-base font-medium py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-colors">
+                            Submit a Paper
+                        </button>
+                    </div>
+                </div>
             </div>
         </section>
 
         <!-- Submission Modal -->
-        <div id="submissionModal" class="fixed inset-0 bg-black bg-opacity-60 hidden justify-center items-center z-50">
-            <div class="bg-white p-8 rounded-lg max-w-2xl w-full text-left relative shadow-xl"
-                onclick="event.stopPropagation()">
-                <button id="closeSubmissionModal"
-                    class="absolute top-2 right-3 text-3xl font-light text-gray-400 hover:text-gray-700">&times;</button>
-                <h3 class="text-xl font-semibold mb-4">Generate Paper Submission Snippet</h3>
-                <p class="text-sm text-gray-600 mb-6">Fill in your paper's details, draw its region on the plot, and
-                    then copy the
-                    generated snippet to send to the organizers.</p>
-
-                <div class="grid grid-cols-2 gap-8">
+        <div id="submissionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50 p-4">
+            <div class="bg-white p-4 sm:p-8 rounded-xl max-w-2xl w-full relative shadow-2xl max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+                <button id="closeSubmissionModal" class="absolute top-4 right-4 text-2xl text-gray-400 hover:text-gray-600">×</button>
+                
+                <h3 class="text-lg sm:text-2xl font-bold mb-4 sm:mb-6">Generate Paper Submission</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
                     <!-- Left side: Form inputs -->
                     <div class="space-y-4">
                         <div>
-                            <label for="paperId" class="block text-sm font-medium text-gray-700">Unique ID</label>
-                            <input type="text" id="paperId" placeholder="e.g., weber-2024-panodreamer"
-                                class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <label for="paperId" class="block text-sm font-medium text-gray-700 mb-1">Unique ID</label>
+                            <input type="text" id="paperId" placeholder="e.g., author-2024-method"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
                         <div>
-                            <label for="paperTitle" class="block text-sm font-medium text-gray-700">Paper Title</label>
-                            <input type="text" id="paperTitle" placeholder="The full title of your paper"
-                                class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <label for="paperTitle" class="block text-sm font-medium text-gray-700 mb-1">Paper Title</label>
+                            <input type="text" id="paperTitle" placeholder="Your paper title"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
                         <div>
-                            <label for="paperUrl" class="block text-sm font-medium text-gray-700">Paper URL</label>
+                            <label for="paperUrl" class="block text-sm font-medium text-gray-700 mb-1">Paper URL</label>
                             <input type="url" id="paperUrl" placeholder="https://arxiv.org/abs/..."
-                                class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
                         <div>
-                            <p class="text-sm font-medium text-gray-700 mt-2">Draw on Plot</p>
-                            <p class="text-xs text-gray-500 italic">The plot becomes interactive when this form is open.
-                                Click and drag
-                                to define your paper's region.</p>
+                            <p class="text-sm font-medium text-gray-700 mb-1">Position on Chart</p>
+                            <p class="text-xs text-gray-500">Click on the chart to position your paper based on input views and extrapolation required.</p>
                         </div>
                     </div>
 
                     <!-- Right side: Generated code -->
                     <div>
-                        <label for="generatedCode" class="block text-sm font-medium text-gray-700">Generated Code
-                            Snippet to
-                            Copy</label>
+                        <label for="generatedCode" class="block text-sm font-medium text-gray-700 mb-1">Generated Code</label>
                         <textarea id="generatedCode" readonly
-                            class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none h-48 font-mono text-xs resize-none"></textarea>
+                            class="w-full h-32 sm:h-48 px-2 sm:px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg font-mono text-xs resize-none"></textarea>
                         <button id="copyCodeBtn"
-                            class="mt-2 w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 transition">Copy
-                            to Clipboard</button>
+                            class="mt-3 sm:mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base font-medium py-2 rounded-lg transition-colors">
+                            Copy to Clipboard
+                        </button>
                     </div>
                 </div>
             </div>
