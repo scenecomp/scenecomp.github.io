@@ -514,6 +514,54 @@
                 font-size: 0.5rem;
             }
         }
+
+        /* Loading spinner styles */
+        .loading-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .spinner-small {
+            width: 24px;
+            height: 24px;
+            border-width: 3px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(2px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .loading-text {
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
     </style>
 </head>
 
@@ -533,6 +581,11 @@
                 <div class="col-span-1 lg:col-span-2">
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-8 overflow-visible">
                         <div id="shared-plot" class="relative h-64 sm:h-96 chart-container rounded-lg p-2 sm:p-4 ml-12 sm:ml-20 mb-8 sm:mb-12">
+                            <!-- Loading overlay for chart -->
+                            <div id="chartLoadingOverlay" class="loading-overlay">
+                                <div class="spinner"></div>
+                                <div class="loading-text">Loading papers...</div>
+                            </div>
                             <!-- Axis lines -->
                             <div class="axis-line x-axis"></div>
                             <div class="axis-line y-axis"></div>
@@ -591,116 +644,30 @@
                                 </div>
                             </div>
 
-                            <!-- Paper markers loaded from papers.txt -->
-                            <script id="papersTxt" type="text/plain">
-CAT3D,0,16,35,65,https://arxiv.org/abs/2406.00000
-RealMDreamer,1,2,25,45,https://arxiv.org/abs/2312.00000
-NerfBusters,32,100,15,30,https://arxiv.org/abs/2305.00000
-ReconFusion,32,100,25,45,https://arxiv.org/abs/2401.00000
-Stable Virtual Camera,64,100,8,20,https://arxiv.org/abs/2402.00000
-Zero-1-to-3,1,2,65,90,https://arxiv.org/abs/2303.00000
-DreamFusion,0,1,70,95,https://arxiv.org/abs/2209.00000
-Instant3D,1,2,50,75,https://arxiv.org/abs/2311.00000
-MVDream,0,1,60,85,https://arxiv.org/abs/2312.00001
-PixelNeRF,1,8,20,40,https://arxiv.org/abs/2012.00000
-SparseFusion,4,16,45,75,https://arxiv.org/abs/2207.00000
-Magic3D,0,1,60,90,https://arxiv.org/abs/2211.00000
-One-2-3-45,1,2,70,90,https://arxiv.org/abs/2302.00000
-SyncDreamer,1,8,35,55,https://arxiv.org/abs/2309.00000
-GaussianDreamer,16,64,30,50,https://arxiv.org/abs/2403.00000
-Neuralangelo,64,100,10,25,https://arxiv.org/abs/2306.00000
-                            </script>
+                            <!-- Paper markers loaded from Google Sheets or papers.csv -->
                         </div>
                     </div>
                 </div>
 
                 <!-- Papers List -->
                 <div class="col-span-1 lg:col-span-1">
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
-                    <h3 class="text-lg sm:text-xl font-bold mb-2 sm:mb-4">Representative Papers</h3>
-                    <p class="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6">Click on a paper to highlight its position on the chart.</p>
-                    
-                    <div class="filter-status" id="filterStatus">
-                        <span id="filterText"></span>
-                        <span class="clear-filter" id="clearFilter">Show all papers</span>
-                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 relative">
+                        <!-- Loading overlay for papers list -->
+                        <div id="papersLoadingOverlay" class="loading-overlay rounded-xl">
+                            <div class="spinner spinner-small"></div>
+                            <div class="loading-text">Loading papers...</div>
+                        </div>
                         
+                        <h3 class="text-lg sm:text-xl font-bold mb-2 sm:mb-4">Representative Papers</h3>
+                        <p class="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6">Click on a paper to highlight its position on the chart.</p>
+                        
+                        <div class="filter-status" id="filterStatus">
+                            <span id="filterText"></span>
+                            <span class="clear-filter" id="clearFilter">Show all papers</span>
+                        </div>
+                            
                         <div id="papersList" class="space-y-2 sm:space-y-3 max-h-64 sm:max-h-96 overflow-y-auto pr-1 sm:pr-2">
-                            <div class="paper-list-item" data-paper="cat3d">
-                                <h4 class="font-semibold text-gray-900">CAT3D</h4>
-                                <p class="text-sm text-gray-600 mt-1 mb-3">Multi-view to 3D synthesis with controllable generation</p>
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="tag" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #be123c;">Text-to-3D</span>
-                                    <span class="tag" style="background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); color: #7e22ce;">Sparse View</span>
-                                    <span class="tag" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e3a8a;">Novel View</span>
-                                    <span class="tag" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #059669;">Scene Completion</span>
-                                </div>
-                            </div>
-                            
-                            <div class="paper-list-item" data-paper="realmdreamer">
-                                <h4 class="font-semibold text-gray-900">RealMDreamer</h4>
-                                <p class="text-sm text-gray-600 mt-1 mb-3">Single image to 360° scene generation</p>
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="tag" style="background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); color: #7e22ce;">Sparse View</span>
-                                </div>
-                            </div>
-                            
-                            <div class="paper-list-item" data-paper="reconfusion">
-                                <h4 class="font-semibold text-gray-900">ReconFusion</h4>
-                                <p class="text-sm text-gray-600 mt-1 mb-3">3D reconstruction from multi-view diffusion</p>
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="tag" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e3a8a;">Novel View</span>
-                                </div>
-                            </div>
-                            
-                            <div class="paper-list-item" data-paper="stable-virtual-camera">
-                                <h4 class="font-semibold text-gray-900">Stable Virtual Camera</h4>
-                                <p class="text-sm text-gray-600 mt-1 mb-3">Stable novel view synthesis from video</p>
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="tag" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e3a8a;">Novel View</span>
-                                </div>
-                            </div>
-                            
-                            <div class="paper-list-item" data-paper="zero123">
-                                <h4 class="font-semibold text-gray-900">Zero-1-to-3</h4>
-                                <p class="text-sm text-gray-600 mt-1 mb-3">Zero-shot single image to 3D object</p>
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="tag" style="background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); color: #7e22ce;">Sparse View</span>
-                                </div>
-                            </div>
-                            
-                            <div class="paper-list-item" data-paper="dreamfusion">
-                                <h4 class="font-semibold text-gray-900">DreamFusion</h4>
-                                <p class="text-sm text-gray-600 mt-1 mb-3">Text-to-3D using 2D diffusion</p>
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="tag" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #be123c;">Text-to-3D</span>
-                                </div>
-                            </div>
-                            
-                            <div class="paper-list-item" data-paper="mvdream">
-                                <h4 class="font-semibold text-gray-900">MVDream</h4>
-                                <p class="text-sm text-gray-600 mt-1 mb-3">Multi-view consistent text-to-3D generation</p>
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="tag" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #be123c;">Text-to-3D</span>
-                                </div>
-                            </div>
-                            
-                            <div class="paper-list-item" data-paper="pixelnerf">
-                                <h4 class="font-semibold text-gray-900">PixelNeRF</h4>
-                                <p class="text-sm text-gray-600 mt-1 mb-3">Neural radiance fields from one or few images</p>
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="tag" style="background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); color: #7e22ce;">Sparse View</span>
-                                </div>
-                            </div>
-                            
-                            <div class="paper-list-item" data-paper="sparsefusion">
-                                <h4 class="font-semibold text-gray-900">SparseFusion</h4>
-                                <p class="text-sm text-gray-600 mt-1 mb-3">Sparse view 3D reconstruction with diffusion</p>
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="tag" style="background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); color: #7e22ce;">Sparse View</span>
-                                    <span class="tag" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #059669;">Scene Completion</span>
-                                </div>
-                    </div>
+                            <!-- Papers will be populated dynamically from CSV/Google Sheets -->
                         </div>
                         
                         <button class="submit-paper-btn mt-4 sm:mt-6 w-full bg-gray-900 hover:bg-gray-800 text-white text-sm sm:text-base font-medium py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-colors">
@@ -716,41 +683,88 @@ Neuralangelo,64,100,10,25,https://arxiv.org/abs/2306.00000
             <div class="bg-white p-4 sm:p-8 rounded-xl max-w-2xl w-full relative shadow-2xl max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
                 <button id="closeSubmissionModal" class="absolute top-4 right-4 text-2xl text-gray-400 hover:text-gray-600">×</button>
                 
-                <h3 class="text-lg sm:text-2xl font-bold mb-4 sm:mb-6">Generate Paper Submission</h3>
+                <h3 class="text-lg sm:text-2xl font-bold mb-4 sm:mb-6">Submit Your Paper</h3>
                 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
-                    <!-- Left side: Form inputs -->
-                    <div class="space-y-4">
-                        <div>
-                            <label for="paperId" class="block text-sm font-medium text-gray-700 mb-1">Unique ID</label>
-                            <input type="text" id="paperId" placeholder="e.g., author-2024-method"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        </div>
-                        <div>
-                            <label for="paperTitle" class="block text-sm font-medium text-gray-700 mb-1">Paper Title</label>
-                            <input type="text" id="paperTitle" placeholder="Your paper title"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        </div>
-                        <div>
-                            <label for="paperUrl" class="block text-sm font-medium text-gray-700 mb-1">Paper URL</label>
-                            <input type="url" id="paperUrl" placeholder="https://arxiv.org/abs/..."
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-700 mb-1">Position on Chart</p>
-                            <p class="text-xs text-gray-500">Click on the chart to position your paper based on input views and extrapolation required.</p>
+                <div class="space-y-6">
+                    <!-- Instructions -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h4 class="text-sm font-medium text-blue-800">How to Submit</h4>
+                                <div class="mt-1 text-sm text-blue-700">
+                                    <p>Click the button below to open our Google Sheet, then leave a comment with your paper details using the template provided.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Right side: Generated code -->
+                    <!-- Form for generating comment template -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <!-- Left side: Form inputs -->
+                        <div class="space-y-4">
+                            <div>
+                                <label for="paperTitle" class="block text-sm font-medium text-gray-700 mb-1">Paper Title *</label>
+                                <input type="text" id="paperTitle" placeholder="Your paper title"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label for="paperUrl" class="block text-sm font-medium text-gray-700 mb-1">Paper URL *</label>
+                                <input type="url" id="paperUrl" placeholder="https://arxiv.org/abs/..."
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label for="minViews" class="block text-sm font-medium text-gray-700 mb-1">Min Input Views *</label>
+                                <input type="number" id="minViews" placeholder="e.g., 0, 1, 4, 32" min="0"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label for="maxViews" class="block text-sm font-medium text-gray-700 mb-1">Max Input Views *</label>
+                                <input type="number" id="maxViews" placeholder="e.g., 1, 16, 64, 100" min="0"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label for="minExtrap" class="block text-sm font-medium text-gray-700 mb-1">Min Extrapolation % *</label>
+                                <input type="number" id="minExtrap" placeholder="e.g., 10, 25, 50" min="0" max="100"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label for="maxExtrap" class="block text-sm font-medium text-gray-700 mb-1">Max Extrapolation % *</label>
+                                <input type="number" id="maxExtrap" placeholder="e.g., 30, 60, 90" min="0" max="100"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label for="briefDesc" class="block text-sm font-medium text-gray-700 mb-1">Brief Description</label>
+                                <textarea id="briefDesc" placeholder="One-line description of your method" rows="2"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Generated comment template -->
                     <div>
-                        <label for="generatedCode" class="block text-sm font-medium text-gray-700 mb-1">Generated Code</label>
-                        <textarea id="generatedCode" readonly
-                            class="w-full h-32 sm:h-48 px-2 sm:px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg font-mono text-xs resize-none"></textarea>
-                        <button id="copyCodeBtn"
-                            class="mt-3 sm:mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base font-medium py-2 rounded-lg transition-colors">
-                            Copy to Clipboard
-                        </button>
+                        <label for="commentTemplate" class="block text-sm font-medium text-gray-700 mb-2">Comment Template</label>
+                        <p class="text-xs text-gray-500 mb-2">Copy this template and paste it as a comment in the Google Sheet:</p>
+                        <textarea id="commentTemplate" readonly
+                            class="w-full h-32 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg font-mono text-sm resize-none"
+                            placeholder="Fill out the form above to generate your comment template..."></textarea>
+                        <div class="flex gap-2 mt-3">
+                            <button id="copyTemplateBtn"
+                                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors">
+                                Copy Template
+                            </button>
+                            <button id="openSheetsBtn"
+                                class="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors">
+                                Open Google Sheets
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,25 +1,69 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // Optional: ingest papers from a CSV-like txt file
-  // Format per line: name,xminViews,xmaxViews,yminPercent,ymaxPercent,link
-  // Place file at /papers.txt at project root
+  // Ingest papers from Google Sheets or CSV file with headers
+  // Format: paper_name,min_input_views,max_input_views,min_extrapolation_percent,max_extrapolation_percent,paper_url,visible
+  // Primary source: Google Sheets, fallback to local papers.csv
   const papersListEl = document.getElementById('papersList');
   const ingestPapersFromTxt = async () => {
     try {
       let text = null;
+      
+      // First, try to fetch from Google Sheets via CORS proxy
+      // This bypasses CORS restrictions for static sites
+      const sheetId = '1gmvjRWJL0nI67Ew8Kvyv0DRV_4G7FWuwjGfdryU6jng';
+      const googleSheetsUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`)}`;
+      
       try {
-        const res = await fetch('papers.txt', { cache: 'no-store' });
+        console.log('Attempting to fetch from Google Sheets...');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
+        const res = await fetch(googleSheetsUrl, { 
+          cache: 'no-store',
+          signal: controller.signal,
+          mode: 'cors'
+        });
+        clearTimeout(timeoutId);
+        
         if (res.ok) {
           text = await res.text();
+          console.log('Successfully loaded data from Google Sheets');
+        } else {
+          console.log('Failed to load Google Sheets, status:', res.status);
         }
       } catch (e) {
-        // ignore network/CORS failure and try inline fallback
+        console.log('Google Sheets fetch error:', e.message, '- trying local CSV');
       }
+      
+      // Fallback to local papers.csv if Google Sheets failed
       if (!text) {
-        const inline = document.getElementById('papersTxt');
-        if (inline) text = inline.textContent.trim();
+        try {
+          const res = await fetch('papers.csv', { cache: 'no-store' });
+          if (res.ok) {
+            text = await res.text();
+            console.log('Successfully loaded papers.csv');
+          } else {
+            console.log('Failed to load papers.csv, status:', res.status);
+          }
+        } catch (e) {
+          console.log('CSV fetch error:', e.message);
+        }
       }
-      if (!text) return; // nothing to ingest
+      
+      if (!text) {
+        console.log('No paper data available - please check papers.csv file');
+        
+        // Hide loading spinners when no data available
+        const chartLoader = document.getElementById('chartLoadingOverlay');
+        const papersLoader = document.getElementById('papersLoadingOverlay');
+        if (chartLoader) chartLoader.style.display = 'none';
+        if (papersLoader) papersLoader.style.display = 'none';
+        return; // nothing to ingest
+      }
       const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      
+      // Skip comment lines (starting with #) and header row
+      const nonCommentLines = lines.filter(line => !line.startsWith('#'));
+      const dataLines = nonCommentLines[0] && nonCommentLines[0].toLowerCase().includes('paper_name') ? nonCommentLines.slice(1) : nonCommentLines;
       const plotContainer = document.getElementById('shared-plot');
       const fragMarkers = document.createDocumentFragment();
       const fragList = document.createDocumentFragment();
@@ -42,9 +86,13 @@ document.addEventListener('DOMContentLoaded', () => {
         'completion': 'Scene Completion'
       };
 
-      lines.forEach((line) => {
-        const [nameRaw, xminViewsStr, xmaxViewsStr, yminStr, ymaxStr, link] = line.split(',').map(s => (s || '').trim());
+      dataLines.forEach((line) => {
+        const [nameRaw, xminViewsStr, xmaxViewsStr, yminStr, ymaxStr, link, visibleStr] = line.split(',').map(s => (s || '').trim());
         if (!nameRaw || !xminViewsStr || !xmaxViewsStr || !yminStr || !ymaxStr) return;
+        
+        // Check visibility - default to visible if field is missing (backward compatibility)
+        const visible = visibleStr ? ['1', 'true', 'yes'].includes(visibleStr.toLowerCase()) : true;
+        if (!visible) return; // Skip hidden papers
         const name = nameRaw;
         const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
@@ -102,8 +150,20 @@ document.addEventListener('DOMContentLoaded', () => {
       // Re-bind interactions for new elements
       rebindInteractions();
       renderAllGaussianMarkers();
+      
+      // Hide loading spinners on success
+      const chartLoader = document.getElementById('chartLoadingOverlay');
+      const papersLoader = document.getElementById('papersLoadingOverlay');
+      if (chartLoader) chartLoader.style.display = 'none';
+      if (papersLoader) papersLoader.style.display = 'none';
     } catch (e) {
-      // ignore
+      console.error('Error loading papers:', e);
+      
+      // Hide loading spinners on error
+      const chartLoader = document.getElementById('chartLoadingOverlay');
+      const papersLoader = document.getElementById('papersLoadingOverlay');
+      if (chartLoader) chartLoader.style.display = 'none';
+      if (papersLoader) papersLoader.style.display = 'none';
     }
   };
 
@@ -578,123 +638,68 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeSubmissionModalBtn = document.getElementById('closeSubmissionModal');
   const plotContainer = document.getElementById('shared-plot');
 
-  const paperIdInput = document.getElementById('paperId');
   const paperTitleInput = document.getElementById('paperTitle');
   const paperUrlInput = document.getElementById('paperUrl');
-  const generatedCodeTextarea = document.getElementById('generatedCode');
-  const copyCodeBtn = document.getElementById('copyCodeBtn');
+  const minViewsInput = document.getElementById('minViews');
+  const maxViewsInput = document.getElementById('maxViews');
+  const minExtrapInput = document.getElementById('minExtrap');
+  const maxExtrapInput = document.getElementById('maxExtrap');
+  const briefDescInput = document.getElementById('briefDesc');
+  const commentTemplateTextarea = document.getElementById('commentTemplate');
+  const copyTemplateBtn = document.getElementById('copyTemplateBtn');
+  const openSheetsBtn = document.getElementById('openSheetsBtn');
 
-  let isDrawing = false;
-  let drawState = { bottom: '50', left: '50', xmin: '48', xmax: '52', ymin: '44', ymax: '56', k: '3' };
-  let userMarker = null;
+  // Google Sheets URL for submissions
+  const googleSheetsSubmissionUrl = 'https://docs.google.com/spreadsheets/d/1gmvjRWJL0nI67Ew8Kvyv0DRV_4G7FWuwjGfdryU6jng/edit#gid=0';
 
-  const updateCodeSnippet = () => {
-    const id = paperIdInput.value.trim() || '[UNIQUE_ID]';
+  const updateCommentTemplate = () => {
     const title = paperTitleInput.value.trim() || '[PAPER_TITLE]';
-    const url = paperUrlInput.value.trim() || '[URL]';
+    const url = paperUrlInput.value.trim() || '[PAPER_URL]';
+    const minViews = minViewsInput.value.trim() || '[MIN_VIEWS]';
+    const maxViews = maxViewsInput.value.trim() || '[MAX_VIEWS]';
+    const minExtrap = minExtrapInput.value.trim() || '[MIN_EXTRAP]';
+    const maxExtrap = maxExtrapInput.value.trim() || '[MAX_EXTRAP]';
+    const desc = briefDescInput.value.trim() || '[BRIEF_DESCRIPTION]';
 
-    // Convert drawn percent extents to view counts for x-axis in the generated snippet
-    const vMin = percentToViews(parseFloat(drawState.xmin));
-    const vMax = percentToViews(parseFloat(drawState.xmax));
-    const vMinRounded = (vMin == null ? '' : String(Math.round(vMin)));
-    const vMaxRounded = (vMax == null ? '' : String(Math.round(vMax)));
+    const template = `📄 NEW PAPER SUBMISSION
 
-    const snippet = `/* Step 1: Add this to the papers list */
-<div class="paper-list-item" data-paper="${id}">
-  <h4 class="font-semibold text-gray-900">${title}</h4>
-  <p class="text-sm text-gray-600 mt-1 mb-3">[Brief description]</p>
-  <div class="flex flex-wrap gap-2">
-    <!-- Add appropriate task tags -->
-    <span class="tag bg-blue-100 text-blue-700">[Task Name]</span>
-  </div>
-</div>
+Paper Title: ${title}
+Paper URL: ${url}
+Brief Description: ${desc}
 
-/* Step 2: Add this paper marker to the chart (extents; no CSS positioning needed) */
-<div class="paper-marker ${id}-marker" data-paper="${id}" data-tasks="[task-ids]" data-xmin-views="${vMinRounded}" data-xmax-views="${vMaxRounded}" data-ymin="${drawState.ymin}" data-ymax="${drawState.ymax}" data-k="${drawState.k}">
-  <div class="tooltip">${title}</div>
-</div>
+📊 DATA FOR CHART:
+- Min Input Views: ${minViews}
+- Max Input Views: ${maxViews}  
+- Min Extrapolation %: ${minExtrap}
+- Max Extrapolation %: ${maxExtrap}
+- Visible: 1
 
-/* Paper URL: ${url} */`;
+CSV Format:
+${title},${minViews},${maxViews},${minExtrap},${maxExtrap},${url},1
+
+Please add this paper to the dataset. Thank you!`;
     
-    generatedCodeTextarea.value = snippet;
+    commentTemplateTextarea.value = template;
   };
 
   const openSubmissionModal = () => {
     submissionModal.style.display = 'flex';
-    plotContainer.style.cursor = 'crosshair';
-    updateCodeSnippet();
-    
-    // Add click listener to plot
-    plotContainer.addEventListener('click', handlePlotClick);
+    updateCommentTemplate();
   };
 
   const closeSubmissionModal = () => {
     submissionModal.style.display = 'none';
-    plotContainer.style.cursor = 'default';
-    
-    // Remove click listener and marker
-    plotContainer.removeEventListener('click', handlePlotClick);
-    if (userMarker) {
-      userMarker.remove();
-      userMarker = null;
-    }
+    // Clear form
+    if (paperTitleInput) paperTitleInput.value = '';
+    if (paperUrlInput) paperUrlInput.value = '';
+    if (minViewsInput) minViewsInput.value = '';
+    if (maxViewsInput) maxViewsInput.value = '';
+    if (minExtrapInput) minExtrapInput.value = '';
+    if (maxExtrapInput) maxExtrapInput.value = '';
+    if (briefDescInput) briefDescInput.value = '';
+    if (commentTemplateTextarea) commentTemplateTextarea.value = '';
   };
 
-  const handlePlotClick = (e) => {
-    // Don't place marker if clicking on existing elements
-    if (e.target !== plotContainer && !e.target.classList.contains('task-region')) return;
-    
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const rect = plotContainer.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    // Convert to percentage
-    const leftPercent = (x / rect.width * 100).toFixed(1);
-    const bottomPercent = ((rect.height - y) / rect.height * 100).toFixed(1);
-    
-    // Update or create marker
-    if (!userMarker) {
-      userMarker = document.createElement('div');
-      userMarker.className = 'paper-marker';
-      userMarker.style.color = '#dc2626';
-      userMarker.style.zIndex = '30';
-      userMarker.style.opacity = '1';
-      userMarker.dataset.k = drawState.k;
-      plotContainer.appendChild(userMarker);
-    }
-    
-    // Default symmetrical extents around the clicked center
-    const halfX = 3.0; // percent
-    const halfY = 8.0; // percent
-
-    const xmin = clamp(parseFloat(leftPercent) - halfX, 0, 100).toFixed(1);
-    const xmax = clamp(parseFloat(leftPercent) + halfX, 0, 100).toFixed(1);
-    const ymin = clamp(parseFloat(bottomPercent) - halfY, 0, 100).toFixed(1);
-    const ymax = clamp(parseFloat(bottomPercent) + halfY, 0, 100).toFixed(1);
-
-    drawState = {
-      left: leftPercent,
-      bottom: bottomPercent,
-      xmin,
-      xmax,
-      ymin,
-      ymax,
-      k: drawState.k
-    };
-
-    userMarker.dataset.xmin = xmin;
-    userMarker.dataset.xmax = xmax;
-    userMarker.dataset.ymin = ymin;
-    userMarker.dataset.ymax = ymax;
-    
-    // Render gaussian preview
-    renderGaussianMarker(userMarker);
-
-    updateCodeSnippet();
-  };
 
   // Handle submit paper button click
   document.querySelectorAll('.submit-paper-btn').forEach(btn => {
@@ -702,28 +707,38 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Form input listeners
-  if (paperIdInput) {
-    [paperIdInput, paperTitleInput, paperUrlInput].forEach(input => {
-      input.addEventListener('input', updateCodeSnippet);
+  [paperTitleInput, paperUrlInput, minViewsInput, maxViewsInput, minExtrapInput, maxExtrapInput, briefDescInput].forEach(input => {
+    if (input) {
+      input.addEventListener('input', updateCommentTemplate);
+    }
+  });
+
+  // Copy template button
+  if (copyTemplateBtn) {
+    copyTemplateBtn.addEventListener('click', () => {
+      commentTemplateTextarea.select();
+      navigator.clipboard.writeText(commentTemplateTextarea.value).then(() => {
+        const originalText = copyTemplateBtn.textContent;
+        copyTemplateBtn.textContent = 'Copied!';
+        copyTemplateBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+        copyTemplateBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        
+        setTimeout(() => {
+          copyTemplateBtn.textContent = originalText;
+          copyTemplateBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+          copyTemplateBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+        }, 2000);
+      }).catch(() => {
+        // Fallback for older browsers
+        document.execCommand('copy');
+      });
     });
   }
 
-  // Copy button
-  if (copyCodeBtn) {
-    copyCodeBtn.addEventListener('click', () => {
-      generatedCodeTextarea.select();
-      document.execCommand('copy');
-      
-      const originalText = copyCodeBtn.textContent;
-      copyCodeBtn.textContent = 'Copied!';
-      copyCodeBtn.classList.add('bg-green-600', 'hover:bg-green-700');
-      copyCodeBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-      
-      setTimeout(() => {
-        copyCodeBtn.textContent = originalText;
-        copyCodeBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
-        copyCodeBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-      }, 2000);
+  // Open Google Sheets button
+  if (openSheetsBtn) {
+    openSheetsBtn.addEventListener('click', () => {
+      window.open(googleSheetsSubmissionUrl, '_blank');
     });
   }
 

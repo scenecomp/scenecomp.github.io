@@ -1,5 +1,7 @@
 # scenecomp.github.io
 
+## Video Setup
+
 The video comes from https://www.youtube.com/watch?v=qKFT4VA7elU. Then, I ran the following commands:
 
 ```bash
@@ -9,3 +11,17 @@ ffmpeg -ss 6 -i uncompressed.mp4 -vcodec libx264 -crf 28 -preset veryslow -an -m
 ```bash
 ffmpeg -i fly-through-unoptimized.mp4 -c:v libx264 -preset medium -crf 23 -g 1 -c:a aac -b:a 128k fly-through.mp4
 ```
+
+## Papers Database
+
+The site fetches papers data from Google Sheets with local fallback to `papers.csv`.
+
+### Update Local Papers Data
+
+To sync your local `papers.csv` with the latest Google Sheets data:
+
+```bash
+curl -L "https://docs.google.com/spreadsheets/d/1gmvjRWJL0nI67Ew8Kvyv0DRV_4G7FWuwjGfdryU6jng/export?format=csv&gid=0" -o papers.csv
+```
+
+This downloads the current spreadsheet and overwrites the local `papers.csv` file.
