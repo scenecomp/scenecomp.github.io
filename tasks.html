@@ -218,10 +218,8 @@
             border-radius: 0.75rem;
             font-size: 0.875rem;
             font-weight: 600;
-            white-space: normal;
-            word-wrap: break-word;
+            white-space: nowrap;
             text-align: center;
-            max-width: 280px;
             pointer-events: none;
             z-index: 1000;
             opacity: 0;
@@ -251,6 +249,25 @@
             opacity: 1;
             transform: translate(-50%, -140%);
             z-index: 300001;
+        }
+
+        .tooltip.vertical {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            white-space: nowrap;
+            max-width: none;
+            padding: 1rem 0.75rem;
+            transform: translate(-100%, -50%);
+            top: 50%;
+            left: -10px;
+        }
+
+        .tooltip.vertical::after {
+            top: 50%;
+            left: 100%;
+            transform: translateY(-50%);
+            border-top-color: transparent;
+            border-left-color: #0f172a;
         }
 
         /* Paper-specific positions - distributed to avoid title areas */
@@ -575,7 +592,7 @@
                     <h1 class="text-2xl sm:text-4xl font-bold text-gray-900">Scene Completion Tasks</h1>
                     <p class="text-gray-500 mt-1 sm:mt-2 text-sm sm:text-base">Reconstruct what you know, generate what you don't.</p>
                 </div>
-                <a href="index.html" class="text-blue-600 hover:text-blue-800 font-medium text-sm sm:text-base mt-2 sm:mt-0">← Back to home</a>
+                <a href="index.html" class="self-start sm:self-center text-blue-600 hover:text-blue-800 font-medium text-sm sm:text-base mt-2 sm:mt-0">← Back to home</a>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">

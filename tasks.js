@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await fetch('papers.csv', { cache: 'no-store' });
         if (res.ok) {
           text = await res.text();
-          console.log('Successfully loaded papers.csv');
         } else {
           console.log('Failed to load papers.csv, status:', res.status);
         }
@@ -120,6 +119,8 @@ document.addEventListener('DOMContentLoaded', () => {
       // Re-bind interactions for new elements
       rebindInteractions();
       renderAllGaussianMarkers();
+      startFireworks();
+      setupInteractionListener();
       
       // Hide loading spinners on success
       const chartLoader = document.getElementById('chartLoadingOverlay');
@@ -167,6 +168,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (listItem) {
           listItem.classList.add('active');
           listItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      });
+      marker.addEventListener('mouseenter', () => {
+        const tooltip = marker.querySelector('.tooltip');
+        if (!tooltip) return;
+
+        // Reset class to default for measurement
+        tooltip.classList.remove('vertical');
+        
+        const rect = tooltip.getBoundingClientRect();
+        const overflowX = rect.right - window.innerWidth;
+        
+        if (overflowX > 0) {
+            tooltip.classList.add('vertical');
         }
       });
     });
@@ -431,7 +446,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Set z-index based on area so smaller splats are on top
     const area = rx * ry;
     const zBase = 1000; // keep above regions
-    marker.style.zIndex = String(zBase + Math.max(0, 100000 - area));
+    const zIndex = String(zBase + Math.max(0, 100000 - area));
+    marker.style.zIndex = zIndex;
+    marker.dataset.baseZIndex = zIndex;
 
     // Brighten when active
     if (marker.classList.contains('active')) {
@@ -682,10 +699,71 @@ Please add this paper to the dataset. Thank you!`;
     }
   });
 
+  // Fireworks intro effect
+  let fireworksInterval = null;
+  let userInteracted = false;
+  const FIREWORKS_INTERVAL_MS = 2000;
+
+  const startFireworks = () => {
+    // Only run on larger screens
+    if (window.innerWidth < 768) {
+      return;
+    }
+
+    const markers = Array.from(document.querySelectorAll('.paper-marker'));
+    if (!markers.length) {
+      return;
+    }
+
+    let currentIndex = 0;
+    fireworksInterval = setInterval(() => {
+      if (userInteracted) {
+        clearInterval(fireworksInterval);
+        return;
+      }
+      
+      // Filter for visible markers, in case of filtering
+      const visibleMarkers = Array.from(document.querySelectorAll('.paper-marker:not(.filtered-out)'));
+      if (!visibleMarkers.length) return;
+
+      // Clear all first
+      markers.forEach(marker => marker.classList.remove('proximity-hover'));
+      
+      // Cycle through visible markers
+      const currentMarker = visibleMarkers[currentIndex % visibleMarkers.length];
+      currentMarker.classList.add('proximity-hover');
+      
+      currentIndex++;
+
+    }, FIREWORKS_INTERVAL_MS);
+  };
+
+  const stopFireworks = () => {
+    if (!userInteracted) {
+      userInteracted = true;
+      clearInterval(fireworksInterval);
+      // Remove any lingering hover effects from the fireworks
+      document.querySelectorAll('.paper-marker.proximity-hover').forEach(marker => {
+        marker.classList.remove('proximity-hover');
+      });
+    }
+  };
+
+  const setupInteractionListener = () => {
+    const plotContainer = document.getElementById('shared-plot');
+    if (plotContainer) {
+      // Stop fireworks on first mousemove or click
+      plotContainer.addEventListener('mousemove', stopFireworks, { once: true });
+      plotContainer.addEventListener('click', stopFireworks, { once: true });
+    }
+  };
+
   // Proximity hover logic to highlight nearest paper
   const setupProximityHover = () => {
     const plotContainer = document.getElementById('shared-plot');
     if (!plotContainer) return;
+
+    let currentlyHoveredMarker = null;
 
     const throttle = (fn, wait) => {
       let inThrottle, lastFn, lastTime;
@@ -708,13 +786,7 @@ Please add this paper to the dataset. Thank you!`;
     };
 
     const handleProximityHover = (e) => {
-      // If mouse is directly over a marker, let CSS :hover handle it
-      if (e.target.classList.contains('paper-marker') || e.target.closest('.paper-marker')) {
-        clearProximityHover();
-        return;
-      }
-      
-      const markers = document.querySelectorAll('.paper-marker');
+      const markers = document.querySelectorAll('.paper-marker:not(.filtered-out)');
       if (!markers.length) return;
 
       const plotRect = plotContainer.getBoundingClientRect();
@@ -722,35 +794,65 @@ Please add this paper to the dataset. Thank you!`;
       const mouseY = e.clientY - plotRect.top;
 
       let closestMarker = null;
-      let minDistance = Infinity;
+      const candidates = [];
 
       markers.forEach(marker => {
         const markerRect = marker.getBoundingClientRect();
+        if (markerRect.width === 0 || markerRect.height === 0) return;
+
         const markerX = (markerRect.left - plotRect.left) + (markerRect.width / 2);
         const markerY = (markerRect.top - plotRect.top) + (markerRect.height / 2);
-        const distance = Math.sqrt(Math.pow(mouseX - markerX, 2) + Math.pow(mouseY - markerY, 2));
+        
+        const rx = markerRect.width / 2;
+        const ry = markerRect.height / 2;
 
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestMarker = marker;
+        // Check if the mouse point is inside the marker's ellipse
+        const value = (Math.pow(mouseX - markerX, 2) / Math.pow(rx, 2)) + 
+                      (Math.pow(mouseY - markerY, 2) / Math.pow(ry, 2));
+
+        if (value <= 1) {
+          const distance = Math.sqrt(Math.pow(mouseX - markerX, 2) + Math.pow(mouseY - markerY, 2));
+          candidates.push({ marker, distance });
         }
       });
 
-      const SNAP_RADIUS = 60; // in pixels
-      
-      // Remove class from all markers first
-      markers.forEach(marker => marker.classList.remove('proximity-hover'));
-
-      // Then add to the closest one if it's within the radius
-      if (closestMarker && minDistance < SNAP_RADIUS) {
-        closestMarker.classList.add('proximity-hover');
+      if (candidates.length > 0) {
+        // From the candidates inside an ellipse, find the one with the closest centroid
+        candidates.sort((a, b) => a.distance - b.distance);
+        closestMarker = candidates[0].marker;
       }
+      
+      // If the closest marker hasn't changed, do nothing to prevent flicker
+      if (closestMarker === currentlyHoveredMarker) {
+        return;
+      }
+
+      // If there was a previously hovered marker, reset it
+      if (currentlyHoveredMarker) {
+        currentlyHoveredMarker.classList.remove('proximity-hover');
+        if (currentlyHoveredMarker.dataset.baseZIndex) {
+          currentlyHoveredMarker.style.zIndex = currentlyHoveredMarker.dataset.baseZIndex;
+        }
+      }
+
+      // If there's a new closest marker, highlight it
+      if (closestMarker) {
+        closestMarker.classList.add('proximity-hover');
+        closestMarker.style.zIndex = '300000';
+      }
+
+      // Update the state
+      currentlyHoveredMarker = closestMarker;
     };
     
     const clearProximityHover = () => {
-      document.querySelectorAll('.paper-marker.proximity-hover').forEach(marker => {
-        marker.classList.remove('proximity-hover');
-      });
+      if (currentlyHoveredMarker) {
+        currentlyHoveredMarker.classList.remove('proximity-hover');
+        if (currentlyHoveredMarker.dataset.baseZIndex) {
+          currentlyHoveredMarker.style.zIndex = currentlyHoveredMarker.dataset.baseZIndex;
+        }
+        currentlyHoveredMarker = null;
+      }
     };
 
     plotContainer.addEventListener('mousemove', throttle(handleProximityHover, 100));
