@@ -1,52 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
   // Ingest papers from Google Sheets or CSV file with headers
   // Format: paper_name,min_input_views,max_input_views,min_extrapolation_percent,max_extrapolation_percent,paper_url,visible
-  // Primary source: Google Sheets, fallback to local papers.csv
+  // Source: papers.csv
   const papersListEl = document.getElementById('papersList');
   const ingestPapersFromTxt = async () => {
     try {
       let text = null;
       
-      // First, try to fetch from Google Sheets via CORS proxy
-      // This bypasses CORS restrictions for static sites
-      const sheetId = '1gmvjRWJL0nI67Ew8Kvyv0DRV_4G7FWuwjGfdryU6jng';
-      const googleSheetsUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`)}`;
-      
       try {
-        console.log('Attempting to fetch from Google Sheets...');
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-        
-        const res = await fetch(googleSheetsUrl, { 
-          cache: 'no-store',
-          signal: controller.signal,
-          mode: 'cors'
-        });
-        clearTimeout(timeoutId);
-        
+        const res = await fetch('papers.csv', { cache: 'no-store' });
         if (res.ok) {
           text = await res.text();
-          console.log('Successfully loaded data from Google Sheets');
+          console.log('Successfully loaded papers.csv');
         } else {
-          console.log('Failed to load Google Sheets, status:', res.status);
+          console.log('Failed to load papers.csv, status:', res.status);
         }
       } catch (e) {
-        console.log('Google Sheets fetch error:', e.message, '- trying local CSV');
-      }
-      
-      // Fallback to local papers.csv if Google Sheets failed
-      if (!text) {
-        try {
-          const res = await fetch('papers.csv', { cache: 'no-store' });
-          if (res.ok) {
-            text = await res.text();
-            console.log('Successfully loaded papers.csv');
-          } else {
-            console.log('Failed to load papers.csv, status:', res.status);
-          }
-        } catch (e) {
-          console.log('CSV fetch error:', e.message);
-        }
+        console.log('CSV fetch error:', e.message);
       }
       
       if (!text) {
@@ -194,7 +164,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.paper-marker').forEach(m => m.classList.remove('active'));
         marker.classList.add('active');
         const listItem = document.querySelector(`.paper-list-item[data-paper="${paperId}"]`);
-        if (listItem) listItem.classList.add('active');
+        if (listItem) {
+          listItem.classList.add('active');
+          listItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
       });
     });
   };
@@ -210,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
       layer.style.position = 'absolute';
       layer.style.inset = '0';
       layer.style.pointerEvents = 'none';
-      layer.style.zIndex = '200000';
+      layer.style.zIndex = '50';
       plot.appendChild(layer);
     }
 
@@ -462,6 +435,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Brighten when active
     if (marker.classList.contains('active')) {
+      let zIndex = 200000; // Start with a high z-index
+      zIndex += 200000; // Add a significant boost for active markers
+      
       // adjust gradient stops to be brighter
       const centerStop = radial.firstChild;
       if (centerStop && centerStop.setAttribute) centerStop.setAttribute('stop-opacity', '0.75');
@@ -473,62 +449,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const renderAllGaussianMarkers = () => {
     document.querySelectorAll('.paper-marker').forEach(renderGaussianMarker);
   };
-
-  // Handle paper selection from list
-  paperListItems.forEach(item => {
-    item.addEventListener('click', () => {
-      const paperId = item.dataset.paper;
-      
-      // Remove active class from all papers
-      paperListItems.forEach(p => p.classList.remove('active'));
-      paperMarkers.forEach(m => m.classList.remove('active'));
-      
-      // Add active class to clicked paper
-      item.classList.add('active');
-      const marker = document.querySelector(`.paper-marker[data-paper="${paperId}"]`);
-      if (marker) {
-        marker.classList.add('active');
-      }
-    });
-  });
-
-  // Handle paper marker clicks on the plot (works for both touch and mouse)
-  paperMarkers.forEach(marker => {
-    // Touch support for mobile
-    marker.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      // Show tooltip on touch
-      const tooltip = marker.querySelector('.tooltip');
-      if (tooltip) {
-        tooltip.style.opacity = '1';
-        setTimeout(() => {
-          tooltip.style.opacity = '';
-        }, 2000);
-      }
-    });
-    
-    marker.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const paperId = marker.dataset.paper;
-      
-      // Remove active class from all
-      paperListItems.forEach(p => p.classList.remove('active'));
-      paperMarkers.forEach(m => m.classList.remove('active'));
-      
-      // Add active class
-      marker.classList.add('active');
-      // Re-render to brighten selected marker
-      renderGaussianMarker(marker);
-      const listItem = document.querySelector(`.paper-list-item[data-paper="${paperId}"]`);
-      if (listItem) {
-        listItem.classList.add('active');
-        // Scroll the paper into view in the list
-        listItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-    });
-  });
 
   // Handle task region clicks for filtering
   taskRegions.forEach(region => {
@@ -762,6 +682,81 @@ Please add this paper to the dataset. Thank you!`;
     }
   });
 
+  // Proximity hover logic to highlight nearest paper
+  const setupProximityHover = () => {
+    const plotContainer = document.getElementById('shared-plot');
+    if (!plotContainer) return;
+
+    const throttle = (fn, wait) => {
+      let inThrottle, lastFn, lastTime;
+      return function() {
+        const context = this, args = arguments;
+        if (!inThrottle) {
+          fn.apply(context, args);
+          lastTime = Date.now();
+          inThrottle = true;
+        } else {
+          clearTimeout(lastFn);
+          lastFn = setTimeout(() => {
+            if (Date.now() - lastTime >= wait) {
+              fn.apply(context, args);
+              lastTime = Date.now();
+            }
+          }, Math.max(wait - (Date.now() - lastTime), 0));
+        }
+      };
+    };
+
+    const handleProximityHover = (e) => {
+      // If mouse is directly over a marker, let CSS :hover handle it
+      if (e.target.classList.contains('paper-marker') || e.target.closest('.paper-marker')) {
+        clearProximityHover();
+        return;
+      }
+      
+      const markers = document.querySelectorAll('.paper-marker');
+      if (!markers.length) return;
+
+      const plotRect = plotContainer.getBoundingClientRect();
+      const mouseX = e.clientX - plotRect.left;
+      const mouseY = e.clientY - plotRect.top;
+
+      let closestMarker = null;
+      let minDistance = Infinity;
+
+      markers.forEach(marker => {
+        const markerRect = marker.getBoundingClientRect();
+        const markerX = (markerRect.left - plotRect.left) + (markerRect.width / 2);
+        const markerY = (markerRect.top - plotRect.top) + (markerRect.height / 2);
+        const distance = Math.sqrt(Math.pow(mouseX - markerX, 2) + Math.pow(mouseY - markerY, 2));
+
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestMarker = marker;
+        }
+      });
+
+      const SNAP_RADIUS = 60; // in pixels
+      
+      // Remove class from all markers first
+      markers.forEach(marker => marker.classList.remove('proximity-hover'));
+
+      // Then add to the closest one if it's within the radius
+      if (closestMarker && minDistance < SNAP_RADIUS) {
+        closestMarker.classList.add('proximity-hover');
+      }
+    };
+    
+    const clearProximityHover = () => {
+      document.querySelectorAll('.paper-marker.proximity-hover').forEach(marker => {
+        marker.classList.remove('proximity-hover');
+      });
+    };
+
+    plotContainer.addEventListener('mousemove', throttle(handleProximityHover, 100));
+    plotContainer.addEventListener('mouseleave', clearProximityHover);
+  };
+
   // Initial render and resize handling for gaussian markers
   const debounce = (fn, ms = 100) => {
     let t;
@@ -774,5 +769,6 @@ Please add this paper to the dataset. Thank you!`;
   renderAllGaussianMarkers();
   ingestPapersFromTxt();
   setupTitleOverlays();
+  setupProximityHover();
   window.addEventListener('resize', debounce(renderAllGaussianMarkers, 150));
 });
