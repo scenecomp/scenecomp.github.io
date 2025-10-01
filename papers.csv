@@ -31,7 +31,7 @@ GaussianDreamer,16,64,30,50,https://arxiv.org/abs/2310.08529,1
 Neuralangelo,64,100,10,25,https://arxiv.org/abs/2306.03092,1
 LRM,1,1,10,90,https://arxiv.org/abs/2311.04400,1
 G3R,2,100,0,15,https://arxiv.org/abs/2409.19405,1
-GraphDreamer,0,1,90,100,https://arxiv.org/abs/2312.00093,1
+GraphDreamer,0,1,50,90,https://arxiv.org/abs/2312.00093,1
 DreamScene360,0,1,10,90,https://arxiv.org/abs/2404.06903,1
 WonderJourney,0,1,30,100,https://arxiv.org/abs/2312.03884,1
 WonderWorld,0,1,30,100,https://arxiv.org/abs/2406.09394,1
