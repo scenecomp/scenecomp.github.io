@@ -148,11 +148,18 @@ document.addEventListener('DOMContentLoaded', () => {
       item.__bound = true;
       item.addEventListener('click', () => {
         const paperId = item.dataset.paper;
+        const wasActive = item.classList.contains('active');
+        // Clear all selections
         document.querySelectorAll('.paper-list-item').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.paper-marker').forEach(m => m.classList.remove('active'));
-        item.classList.add('active');
-        const marker = document.querySelector(`.paper-marker[data-paper="${paperId}"]`);
-        if (marker) marker.classList.add('active');
+        // Toggle: if it was active, leave unselected; else select this one
+        if (!wasActive) {
+          item.classList.add('active');
+          const marker = document.querySelector(`.paper-marker[data-paper="${paperId}"]`);
+          if (marker) marker.classList.add('active');
+        }
+        // Update gaussian visuals
+        renderAllGaussianMarkers();
       });
     });
     newPaperMarkers.forEach(marker => {
@@ -161,14 +168,21 @@ document.addEventListener('DOMContentLoaded', () => {
       marker.addEventListener('click', (e) => {
         e.stopPropagation();
         const paperId = marker.dataset.paper;
+        const wasActive = marker.classList.contains('active');
+        // Clear all selections
         document.querySelectorAll('.paper-list-item').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.paper-marker').forEach(m => m.classList.remove('active'));
-        marker.classList.add('active');
-        const listItem = document.querySelector(`.paper-list-item[data-paper="${paperId}"]`);
-        if (listItem) {
-          listItem.classList.add('active');
-          listItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        // Toggle selection
+        if (!wasActive) {
+          marker.classList.add('active');
+          const listItem = document.querySelector(`.paper-list-item[data-paper="${paperId}"]`);
+          if (listItem) {
+            listItem.classList.add('active');
+            listItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
         }
+        // Update gaussian visuals
+        renderAllGaussianMarkers();
       });
       marker.addEventListener('mouseenter', () => {
         const tooltip = marker.querySelector('.tooltip');
@@ -455,9 +469,16 @@ document.addEventListener('DOMContentLoaded', () => {
       let zIndex = 200000; // Start with a high z-index
       zIndex += 200000; // Add a significant boost for active markers
       
-      // adjust gradient stops to be brighter
-      const centerStop = radial.firstChild;
-      if (centerStop && centerStop.setAttribute) centerStop.setAttribute('stop-opacity', '0.75');
+      // adjust gradient stops to be more opaque for stronger visibility
+      const stopNodes = radial.querySelectorAll('stop');
+      if (stopNodes && stopNodes.length) {
+        // Heavier center falloff
+        const newAlphas = [0.85, 0.60, 0.35, 0.15];
+        stopNodes.forEach((node, i) => {
+          const a = newAlphas[Math.min(i, newAlphas.length - 1)];
+          node.setAttribute('stop-opacity', String(a));
+        });
+      }
       ellipse.setAttribute('filter', '');
       center.setAttribute('r', '3');
     }
@@ -467,22 +488,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.paper-marker').forEach(renderGaussianMarker);
   };
 
-  // Handle task region clicks for filtering
-  taskRegions.forEach(region => {
-    region.addEventListener('click', (e) => {
-      // Don't trigger if clicking on a paper marker
-      if (e.target.classList.contains('paper-marker')) return;
-      
-      const taskType = region.dataset.task;
-      
-      // Toggle filter
-      if (currentFilter === taskType) {
-        clearFilters();
-      } else {
-        applyFilter(taskType);
-      }
-    });
-  });
+  // Disable task region click filtering per updated UX
 
   // Clear filter button
   if (clearFilter) {
