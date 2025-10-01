@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
     animate();
   });
 
-  const zoomLink = 'https://zoom.us/j/TODO'; // Placeholder Zoom link
+  const zoomLink = 'https://scenecomp.github.io/'; // Use website URL in calendar event details
 
   // Update main "Add to Calendar" link
   const mainCalendarLink = document.getElementById('main-calendar-link');

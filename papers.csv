@@ -2,28 +2,37 @@
 #,,,,,,
 # Column Descriptions:,,,,,,
 # - paper_name: Name/title of the research paper,,,,,,
-# - min_input_views: Minimum number of input camera views required (0 = text-only,1+ = image inputs),,,,,
+"# - min_input_views: Minimum number of input camera views required (0 = text-only, 1+ = image inputs)",,,,,,
 # - max_input_views: Maximum number of input views the method can handle effectively,,,,,,
-# - min_extrapolation_percent: Minimum level of extrapolation/hallucination required (0-100%,where 0 = pure interpolation),,,,,
-# - max_extrapolation_percent: Maximum level of extrapolation the method performs (0-100%,where 100 = complete hallucination),,,,,
+"# - min_extrapolation_percent: Minimum level of extrapolation/hallucination required (0-100%, where 0 = pure interpolation)",,,,,,
+"# - max_extrapolation_percent: Maximum level of extrapolation the method performs (0-100%, where 100 = complete hallucination)",,,,,,
 # - paper_url: Link to the research paper (typically arXiv),,,,,,
-# - visible: Whether to display this paper (1/true/yes = show,0/false/no = hide),,,,,
+"# - visible: Whether to display this paper (1/true/yes = show, 0/false/no = hide)",,,,,,
 #           Use 0 to temporarily hide papers or draft entries from display,,,,,,
 #,,,,,,
 paper_name,min_input_views,max_input_views,min_extrapolation_percent,max_extrapolation_percent,paper_url,visible
-CAT3D,0,16,35,65,https://arxiv.org/abs/2406.00000,1
-RealMDreamer,1,2,25,45,https://arxiv.org/abs/2312.00000,1
-NerfBusters,32,100,15,30,https://arxiv.org/abs/2305.00000,1
-ReconFusion,32,100,25,45,https://arxiv.org/abs/2401.00000,1
-Stable Virtual Camera,64,100,8,20,https://arxiv.org/abs/2402.00000,1
-Zero-1-to-3,1,2,65,90,https://arxiv.org/abs/2303.00000,1
-DreamFusion,0,1,70,95,https://arxiv.org/abs/2209.00000,1
-Instant3D,1,2,50,75,https://arxiv.org/abs/2311.00000,1
-MVDream,0,1,60,85,https://arxiv.org/abs/2312.00001,1
-PixelNeRF,1,8,20,40,https://arxiv.org/abs/2012.00000,1
-SparseFusion,4,16,45,75,https://arxiv.org/abs/2207.00000,1
-Magic3D,0,1,60,90,https://arxiv.org/abs/2211.00000,1
-One-2-3-45,1,2,70,90,https://arxiv.org/abs/2302.00000,1
-SyncDreamer,1,8,35,55,https://arxiv.org/abs/2309.00000,1
-GaussianDreamer,16,64,30,50,https://arxiv.org/abs/2403.00000,1
-Neuralangelo,64,100,10,25,https://arxiv.org/abs/2306.00000,1
+CAT3D,0,16,35,65,https://arxiv.org/abs/2405.10314,1
+RealmDreamer,1,2,25,45,https://arxiv.org/abs/2404.07199,1
+Nerfbusters,32,100,15,30,https://arxiv.org/abs/2304.10532,1
+ReconFusion,32,100,25,45,https://arxiv.org/abs/2312.02981,1
+Stable Virtual Camera,1,100,8,20,https://arxiv.org/abs/2503.14489,1
+Zero-1-to-3,1,2,65,90,https://arxiv.org/abs/2303.11328,1
+DreamFusion,0,1,70,95,https://arxiv.org/abs/2209.14988,1
+Instant3D,1,2,50,75,https://arxiv.org/abs/2311.06214,1
+MVDream,0,1,60,85,https://arxiv.org/abs/2308.16512,1
+pixelNeRF,1,8,20,40,https://arxiv.org/abs/2012.02190,1
+SparseFusion,4,16,45,75,https://arxiv.org/abs/2304.14340,1
+Magic3D,0,1,60,90,https://arxiv.org/abs/2211.10440,1
+NeRFiller,1,40,20,20,https://arxiv.org/abs/2312.04560,
+Fillerbuster,1,40,40,60,https://arxiv.org/abs/2502.05175,
+One-2-3-45,1,2,70,90,https://arxiv.org/abs/2306.16928,1
+SyncDreamer,1,8,35,55,https://arxiv.org/abs/2309.03453,1
+GaussianDreamer,16,64,30,50,https://arxiv.org/abs/2310.08529,1
+Neuralangelo,64,100,10,25,https://arxiv.org/abs/2306.03092,1
+LRM,1,1,10,90,https://arxiv.org/abs/2311.04400,1
+G3R,2,100,0,15,https://arxiv.org/abs/2409.19405,1
+GraphDreamer,0,1,90,100,https://arxiv.org/abs/2312.00093,1
+DreamScene360,0,1,10,90,https://arxiv.org/abs/2404.06903,1
+WonderJourney,0,1,30,100,https://arxiv.org/abs/2312.03884,1
+WonderWorld,0,1,30,100,https://arxiv.org/abs/2406.09394,1
+LucidDreamer,0,1,50,90,https://arxiv.org/abs/2311.13384,1
