@@ -1,105 +1,109 @@
 document.addEventListener('DOMContentLoaded', () => {
+// === Position-mapped video with velocity-adaptive subsampling ===
+(() => {
   const video = document.getElementById('scrollVideo');
-  const DESKTOP_BREAKPOINT = 768;
-  let animationFrameId;
 
-  const setupVideo = () => {
-    // Clean up previous listeners/loops
-    window.removeEventListener('scroll', scrollHandler);
-    if (animationFrameId) {
-      cancelAnimationFrame(animationFrameId);
-    }
+  // Tunables
+  const STEP_FPS     = 30;     // logical steps per second of video (target detail at slow scroll)
+  const PAD_END      = 0.05;   // keep a little headroom off the very end
+  const V_SMOOTH     = 0.25;   // EMA smoothing of scroll velocity (0..1, higher = smoother)
+  const BASE_STRIDE  = 1;      // minimum step multiple (1 = finest)
+  const GAIN_STRIDE  = 0.002;  // px/sec → extra stride growth (increase to skip more on fast scroll)
+  const MAX_STRIDE   = 12;     // upper bound on stride multiple (bigger = more skipping at high speed)
 
-    if (window.innerWidth < DESKTOP_BREAKPOINT) {
-      // Mobile: Direct scroll-to-play, "primed" by the first touch
-      video.pause();
-      const primeVideo = () => {
-        video.play();
-        video.pause();
-        // The event listener is removed so this only ever happens once.
-        document.body.removeEventListener('touchstart', primeVideo);
-      };
-      document.body.addEventListener('touchstart', primeVideo);
-      window.addEventListener('scroll', scrollHandler);
-    } else {
-      // Desktop: Smoothed scroll-to-play
-      let targetTime = 0;
-      const LERP_FACTOR = 0.1;
-      video.pause();
+  let dur = 1;
+  let totalSteps = 1;
+  let lastAppliedStep = -1;
 
-      window.addEventListener('scroll', () => {
-        const scrollableHeight = document.body.scrollHeight - window.innerHeight;
-        if (scrollableHeight <= 0) return;
-        targetTime = (window.scrollY / scrollableHeight) * video.duration;
-      });
+  // scroll velocity state
+  let lastT = null;
+  let lastScrollY = window.scrollY;
+  let vEma = 0; // px/sec
 
-      const animate = () => {
-        const currentTime = video.currentTime;
-        const newTime = currentTime + (targetTime - currentTime) * LERP_FACTOR;
-        if (Math.abs(newTime - currentTime) > 0.01) {
-          video.currentTime = newTime;
-        }
-        animationFrameId = requestAnimationFrame(animate);
-      };
-      animate();
-    }
+  // Mobile priming so seeks are reliable
+  const primeVideo = () => {
+    try { video.play().catch(()=>{}).finally(() => video.pause()); } catch {}
+    document.body.removeEventListener('touchstart', primeVideo);
   };
-
-  const scrollHandler = () => {
-    const scrollableHeight = document.body.scrollHeight - window.innerHeight;
-    if (scrollableHeight <= 0) return;
-    const scroll = window.scrollY / scrollableHeight;
-    if (video.duration) {
-      video.currentTime = video.duration * scroll;
-    }
-  };
+  document.body.addEventListener('touchstart', primeVideo, { once: true });
 
   video.addEventListener('loadedmetadata', () => {
-    let targetTime = 0;
-    const LERP_FACTOR = 0.1; // Controls smoothness: smaller is smoother
+    dur = Math.max(1, video.duration || 1);
+    totalSteps = Math.max(1, Math.floor(dur * STEP_FPS));
     video.pause();
-
-    // A function to calculate and set the video's target time based on scroll.
-    const setTargetTimeFromScroll = () => {
-      const scrollableHeight = document.body.scrollHeight - window.innerHeight;
-      if (scrollableHeight > 0 && video.duration) {
-        targetTime = (window.scrollY / scrollableHeight) * video.duration;
-      } else {
-        targetTime = 0;
-      }
-    };
-
-    // For mobile, "prime" the video on the first touch to enable scripting.
-    const primeVideo = () => {
-      if (video.paused) {
-        video.play();
-        video.pause();
-      }
-      document.body.removeEventListener('touchstart', primeVideo);
-    };
-    document.body.addEventListener('touchstart', primeVideo);
-
-    // Set the initial position of the video on page load.
-    setTargetTimeFromScroll();
-    
-    // Listen for scroll events to update the video's target time.
-    window.addEventListener('scroll', setTargetTimeFromScroll);
-
-    // Use an animation loop for smooth, interpolated playback.
-    const animate = () => {
-      const currentTime = video.currentTime;
-      const newTime = currentTime + (targetTime - currentTime) * LERP_FACTOR;
-      if (Math.abs(newTime - currentTime) > 0.01) {
-        video.currentTime = newTime;
-      }
-      requestAnimationFrame(animate);
-    };
-    animate();
+    video.removeAttribute('loop');
+    video.currentTime = 0;
+    lastT = null;
+    lastAppliedStep = -1;
   });
 
-  const zoomLink = 'https://scenecomp.github.io/'; // Use website URL in calendar event details
+  // Map scroll position → target step (0..totalSteps)
+  function desiredStepFromScroll() {
+    const de = document.documentElement;
+    const maxScroll = Math.max(1, de.scrollHeight - de.clientHeight);
+    const raw = window.scrollY / maxScroll; // 0..1
+    return Math.round(raw * totalSteps);
+  }
 
-  // Update main "Add to Calendar" link
+  // rAF loop: measure velocity, compute stride, quantize desired step, seek
+  function tick(now) {
+    if (lastT == null) lastT = now;
+    const dt = Math.max(0, (now - lastT) / 1000); // seconds
+    lastT = now;
+
+    // px/sec velocity (positive down)
+    const y = window.scrollY;
+    const vy = (y - lastScrollY) / (dt || 1e-6);
+    lastScrollY = y;
+
+    // Smooth velocity to reduce jitter
+    vEma = V_SMOOTH * vy + (1 - V_SMOOTH) * vEma;
+
+    // Compute stride multiple from |velocity|
+    const stride = Math.max(
+      BASE_STRIDE,
+      Math.min(MAX_STRIDE, Math.floor(BASE_STRIDE + Math.abs(vEma) * GAIN_STRIDE))
+    );
+
+    // Desired step from position, then quantize to stride grid
+    const want = desiredStepFromScroll();
+    const quant = Math.round(want / stride) * stride;
+
+    if (quant !== lastAppliedStep) {
+      lastAppliedStep = quant;
+      const hiStep = Math.max(0, totalSteps - Math.floor(PAD_END * STEP_FPS));
+      const clampedStep = Math.max(0, Math.min(quant, hiStep));
+      const t = (clampedStep / totalSteps) * dur;
+
+      if (!Number.isNaN(t)) {
+        // Use fastSeek when available for snappier jumps
+        if (typeof video.fastSeek === 'function') {
+          try { video.fastSeek(t); } catch { video.currentTime = t; }
+        } else {
+          video.currentTime = t;
+        }
+      }
+    }
+
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  // Recompute step count on resize (page height changes) and on load
+  const recalc = () => {
+    if (video.duration) {
+      dur = Math.max(1, video.duration);
+      totalSteps = Math.max(1, Math.floor(dur * STEP_FPS));
+    }
+  };
+  window.addEventListener('resize', recalc);
+  window.addEventListener('load', recalc);
+})();
+
+
+  // === Your existing calendar / talks code ===
+  const zoomLink = 'https://scenecomp.github.io/';
+
   const mainCalendarLink = document.getElementById('main-calendar-link');
   if (mainCalendarLink) {
     const url = new URL(mainCalendarLink.href);
@@ -108,8 +112,6 @@ document.addEventListener('DOMContentLoaded', () => {
     url.searchParams.set('details', details);
     mainCalendarLink.href = url.toString();
   }
-
-  // Explainer moved to tasks.html; no explainer logic on homepage
 
   const talks = document.querySelectorAll('tbody tr');
   const eventDate = '20251020';
@@ -121,21 +123,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const timeCell = cells[0];
     const speakerCell = cells[1];
-
     const speakerName = speakerCell.textContent.trim();
     const isSpecialSlot = ["Opening Remarks", "Coffee Break", "Closing Remarks"].includes(speakerName);
-    
+
     const timeString = timeCell.textContent.trim();
     const timeMatch = timeString.match(/(\d{2}):(\d{2})\s*–\s*(\d{2}):(\d{2})/);
-
     if (isSpecialSlot || !timeMatch) return;
 
     const [, startHour, startMin, endHour, endMin] = timeMatch;
-    
     const dates = `${eventDate}T${startHour}${startMin}00/${eventDate}T${endHour}${endMin}00`;
     const eventTitle = `SceneComp @ ICCV 2025: ${speakerName}`;
-    let eventDetails = `Talk by ${speakerName} at SceneComp 2025.`;
-    eventDetails += ` Join here: ${zoomLink}`;
+    let eventDetails = `Talk by ${speakerName} at SceneComp 2025. Join here: ${zoomLink}`;
     const location = `ICCV 2025`;
     const timezone = `Pacific/Honolulu`;
 
@@ -146,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
     url.searchParams.set('details', eventDetails);
     url.searchParams.set('location', location);
     url.searchParams.set('ctz', timezone);
-    
+
     const calendarLink = document.createElement('a');
     calendarLink.href = url.href;
     calendarLink.target = '_blank';
@@ -156,4 +154,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     speakerCell.appendChild(calendarLink);
   });
-}); 
+});

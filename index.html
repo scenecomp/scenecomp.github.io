@@ -129,12 +129,20 @@
   </style>
 </head>
 
+
 <body class="font-sans bg-gray-50 text-gray-900">
 
   <video id="scrollVideo" class="fixed top-0 left-0 w-full h-full object-cover -z-10 opacity-20 pointer-events-none"
     muted playsinline preload="auto">
     <source src="assets/fly-through.mp4" type="video/mp4">
   </video>
+
+  
+
+  <div aria-hidden="true"
+     class="pointer-events-none fixed inset-y-0 left-1/2 -translate-x-1/2
+            w-[min(48rem,92vw)] bg-gray-100/60 backdrop-blur-[2px]
+            ring-1 ring-black/5 shadow-sm -z-10"></div>
 
   <main>
     <section class="py-8 px-4 max-w-2xl mx-auto text-left">
@@ -240,13 +248,13 @@
           </tr>
           <tr>
             <td class="border-b border-gray-200 py-2 px-3">11:25 – 12:00</td>
-            <td class="border-b border-gray-200 py-2 px-3"><a href="https://zgojcic.github.io/" target="_blank"
-                rel="noopener noreferrer" class="text-blue-600 hover:underline">Zan Gojcic</a></td>
+            <td class="border-b border-gray-200 py-2 px-3"><a href="https://theialab.ca/" target="_blank"
+                rel="noopener noreferrer" class="text-blue-600 hover:underline">Andrea Tagliasacchi</a></td>
           </tr>
           <tr>
             <td class="border-b border-gray-200 py-2 px-3">12:00 – 12:35</td>
-            <td class="border-b border-gray-200 py-2 px-3"><a href="https://theialab.ca/" target="_blank"
-                rel="noopener noreferrer" class="text-blue-600 hover:underline">Andrea Tagliasacchi</a></td>
+            <td class="border-b border-gray-200 py-2 px-3"><a href="https://zgojcic.github.io/" target="_blank"
+                rel="noopener noreferrer" class="text-blue-600 hover:underline">Zan Gojcic</a></td>
           </tr>
           <tr class="bg-gray-200">
             <td class="border-b border-gray-200 py-2 px-3">12:35 – 12:40</td>
@@ -383,6 +391,8 @@
 
   <script src="main.js"></script>
 
+  
+  
 </body>
 
 </html>
