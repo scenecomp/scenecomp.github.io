@@ -97,17 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
     animate();
   });
 
-  const zoomLink = 'https://scenecomp.github.io/'; // Use website URL in calendar event details
-
-  // Update main "Add to Calendar" link
-  const mainCalendarLink = document.getElementById('main-calendar-link');
-  if (mainCalendarLink) {
-    const url = new URL(mainCalendarLink.href);
-    let details = url.searchParams.get('details') || '';
-    details += ` Join here: ${zoomLink}`;
-    url.searchParams.set('details', details);
-    mainCalendarLink.href = url.toString();
-  }
+  // Removed Zoom link injection into calendar details
 
   // Explainer moved to tasks.html; no explainer logic on homepage
 
@@ -135,7 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const dates = `${eventDate}T${startHour}${startMin}00/${eventDate}T${endHour}${endMin}00`;
     const eventTitle = `SceneComp @ ICCV 2025: ${speakerName}`;
     let eventDetails = `Talk by ${speakerName} at SceneComp 2025.`;
-    eventDetails += ` Join here: ${zoomLink}`;
     const location = `ICCV 2025`;
     const timezone = `Pacific/Honolulu`;
 
